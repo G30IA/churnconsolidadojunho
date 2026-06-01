@@ -195,7 +195,7 @@
                             Radar de Vulnerabilidade (Causalidades)
                             <i data-lucide="radar" class="w-5 h-5 text-slate-400"></i>
                         </h3>
-                        <div id="chart-impact-radar" class="h-64"></div>
+                        <div id="chart-impact-radar" class="h-[420px] w-full flex justify-center items-center"></div>
                         <p class="text-[10px] text-center text-slate-500 mt-2">Distribuição % de queixas extraídas via NLP dos feedbacks reais.</p>
                     </div>
                 </div>
@@ -287,13 +287,13 @@
                             <div class="border border-slate-200 p-4 rounded-lg bg-white shadow-sm flex justify-between items-center">
                                 <div>
                                     <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Hipótese Nula (H0)</p>
-                                    <p class="text-sm font-medium text-slate-700">A presença da IA não altera a média de NPS ($\mu_1 = \mu_2$).</p>
+                                    <p class="text-sm font-medium text-slate-700">A presença da IA não altera a média de NPS (μ₁ = μ₂).</p>
                                 </div>
                             </div>
                             <div class="border border-blue-200 p-4 rounded-lg bg-blue-50 shadow-sm flex justify-between items-center">
                                 <div>
                                     <p class="text-[10px] font-bold text-blue-500 uppercase mb-1">Hipótese Alternativa (H1)</p>
-                                    <p class="text-sm font-medium text-blue-900">A IA reduz significativamente o NPS ($\mu_1 \neq \mu_2$).</p>
+                                    <p class="text-sm font-medium text-blue-900">A IA reduz significativamente o NPS (μ₁ ≠ μ₂).</p>
                                 </div>
                             </div>
                         </div>
@@ -332,7 +332,7 @@
                         </div>
                         <div class="border-l border-slate-200 pl-6 text-center w-full md:w-1/3">
                             <p class="text-xs font-bold text-slate-400 uppercase mb-1">P-Value Alcançado</p>
-                            <p id="stats-pvalue" class="text-3xl font-black text-green-600 stat-value">P &lt; 0.05</p>
+                            <p id="stats-pvalue" class="text-3xl font-black text-green-600 stat-value">p &lt; 0.05</p>
                             <p class="text-[10px] text-green-700 mt-1 font-bold bg-green-100 inline-block px-2 py-1 rounded">Rejeitamos H0 (95% Confiança)</p>
                         </div>
                     </div>
@@ -344,7 +344,7 @@
                         <i data-lucide="line-chart" class="text-emerald-500 w-5 h-5"></i> 3. Modelo de Regressão Linear Simples (OLS)
                     </h3>
                     <p class="text-slate-600 mb-6 leading-relaxed text-sm">
-                        Avaliamos o rácio de frustração correlacionando a <strong>Extensão da Reclamação ($X$)</strong> com a <strong>Nota de NPS ($Y$)</strong>. O modelo OLS (Ordinary Least Squares) permite prever a degradação da satisfação com base no volume descritivo do churn.
+                        Avaliamos o rácio de frustração correlacionando a <strong>Extensão da Reclamação (X)</strong> com a <strong>Nota de NPS (Y)</strong>. O modelo OLS (Ordinary Least Squares) permite prever a degradação da satisfação com base no volume descritivo do churn.
                     </p>
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div class="lg:col-span-2 bg-slate-50 border border-slate-200 p-2 rounded-xl">
@@ -353,22 +353,22 @@
                         <div class="flex flex-col justify-center gap-4">
                             <div class="math-block text-center border-l-0 border-t-4 border-emerald-500">
                                 <p class="text-xs text-slate-500 mb-2 uppercase font-bold">Equação da Reta Inferida</p>
-                                <p class="text-lg font-black text-slate-800">$\hat{Y} = <span id="reg-b0"></span> + (<span id="reg-b1"></span>)X$</p>
+                                <p class="text-xl font-black text-slate-800">Ŷ = <span id="reg-b0"></span> + (<span id="reg-b1"></span>)X</p>
                             </div>
                             <div class="grid grid-cols-2 gap-4">
                                 <div class="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">R-Squared ($R^2$)</p>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">R-Squared (R²)</p>
                                     <h4 id="stats-r2" class="text-xl font-black text-slate-700 stat-value">0.00</h4>
                                     <p class="text-[9px] text-slate-500 mt-1">Variância explicada.</p>
                                 </div>
                                 <div class="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Pearson ($r$)</p>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Pearson (r)</p>
                                     <h4 id="stats-r" class="text-xl font-black text-slate-700 stat-value">0.00</h4>
                                     <p class="text-[9px] text-slate-500 mt-1">Força da correlação.</p>
                                 </div>
                             </div>
                             <div class="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
-                                <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Inclinação Analítica (Slope $\beta_1$)</p>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Inclinação Analítica (Slope β₁)</p>
                                 <p class="text-xs text-slate-600 mt-1">Para cada 100 caracteres extra escritos pelo cliente na reclamação, o NPS sofre uma queda projetada de <strong id="reg-drop" class="text-red-600"></strong> pontos.</p>
                             </div>
                         </div>
@@ -381,7 +381,7 @@
                     <div>
                         <h4 class="text-lg font-bold text-white mb-2">Veredito Estatístico & Plano de Acção</h4>
                         <p class="text-sm text-slate-300 leading-relaxed">
-                            A anomalia sistémica não decorre de variação natural (<i class="italic text-slate-400">Common Cause Variation</i>), mas sim de uma <strong>Causa Especial</strong> matematicamente ligada ao produto satélite (Carchat). Há evidência estatística robusta ($p < 0.05$, correlação negativa forte) de que a oferta conjunta canibaliza o <i>Lifetime Value</i> (LTV) do <i>core product</i> (G30). Recomenda-se quarentena estratégica do <i>cross-sell</i> para clientes na fase de <i>Onboarding</i> imediato.
+                            A anomalia sistémica não decorre de variação natural (<i class="italic text-slate-400">Common Cause Variation</i>), mas sim de uma <strong>Causa Especial</strong> matematicamente ligada ao produto satélite (Carchat). Há evidência estatística robusta (p &lt; 0.05, correlação negativa forte) de que a oferta conjunta canibaliza o <i>Lifetime Value</i> (LTV) do <i>core product</i> (G30). Recomenda-se quarentena estratégica do <i>cross-sell</i> para clientes na fase de <i>Onboarding</i> imediato.
                         </p>
                     </div>
                 </div>
@@ -961,13 +961,22 @@
                     { name: 'Com Carchat', data: radarCarchat }, 
                     { name: 'Sem Carchat', data: radarSemCarchat }
                 ],
-                chart: { height: 280, type: 'radar', toolbar:{show:false}, fontFamily: 'inherit' },
+                chart: { height: 420, type: 'radar', toolbar:{show:false}, fontFamily: 'inherit' },
+                plotOptions: {
+                    radar: {
+                        size: 140,
+                        polygons: {
+                            strokeColors: '#e2e8f0',
+                            connectorColors: '#e2e8f0'
+                        }
+                    }
+                },
                 labels: ['Falha Técnica (IA/Bugs)', 'Falta Acompanhamento (CS)', 'Expectativa Frustrada', 'Financeiro/Preço', 'Falta de Tempo/Equipe'],
                 colors: ['#ef4444', '#3b82f6'],
                 stroke: { width: 2 },
                 fill: { opacity: 0.2 },
-                markers: { size: 3 },
-                yaxis: { show: false, max: 100 }
+                markers: { size: 4, hover: { size: 6 } },
+                yaxis: { show: false }
             };
             chartImpactRadar = new ApexCharts(document.querySelector("#chart-impact-radar"), rdOptions);
         }
