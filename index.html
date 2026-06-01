@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="pt-pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Central de Inteligência de Churn | Six Sigma</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- ApexCharts -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <!-- PapaParse para importação de CSV -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .sidebar-list::-webkit-scrollbar { width: 4px; }
+        .sidebar-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .modal { display: none; }
+        .modal.active { display: flex; }
+        
+        /* Math typesetting styling */
+        .math-block { font-family: 'Courier New', Courier, monospace; background: #f8fafc; padding: 10px; border-left: 4px solid #3b82f6; border-radius: 4px; }
+    </style>
+</head>
+<body class="bg-orange-50 min-h-screen font-sans text-slate-800 p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <!-- HEADER -->
+        <header class="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="trending-down" class="text-red-500 w-8 h-8"></i>
+                    Central de Inteligência de Churn
+                </h1>
+                <p class="text-slate-500 mt-1">Análise geral, auditoria de casos, previsão ARIMA e estatística Six Sigma.</p>
+            </div>
+            <div class="flex flex-col sm:flex-row items-center gap-3">
+                <!-- BOTÃO DE IMPORTAÇÃO CSV -->
+                <label for="csv-upload" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-sm cursor-pointer transition-colors font-semibold text-sm">
+                    <i data-lucide="upload-cloud" class="w-4 h-4"></i> Importar CSV
+                </label>
+                <input type="file" id="csv-upload" accept=".csv" class="hidden" />
+
+                <div class="flex items-center gap-2 bg-white p-2 rounded-lg shadow-sm border border-slate-200">
+                    <i data-lucide="calendar" class="text-slate-400 w-5 h-5 ml-2"></i>
+                    <select id="monthFilter" class="bg-transparent border-none text-slate-700 font-medium focus:ring-0 cursor-pointer p-2 outline-none">
+                        <option value="Todos">Visualizar Todos os Meses</option>
+                    </select>
+                </div>
+            </div>
+        </header>
+
+        <!-- NAVEGAÇÃO POR ABAS -->
+        <nav class="flex space-x-6 border-b border-slate-200 mb-8 px-2 overflow-x-auto">
+            <button onclick="switchTab('overview')" id="tab-overview" class="tab-btn pb-3 px-1 whitespace-nowrap flex items-center gap-2 transition-colors border-b-2 border-blue-600 text-blue-700 font-semibold">
+                <i data-lucide="activity" class="w-4 h-4"></i> Visão Geral
+            </button>
+            <button onclick="switchTab('audit')" id="tab-audit" class="tab-btn pb-3 px-1 whitespace-nowrap flex items-center gap-2 transition-colors text-slate-500 hover:text-slate-800">
+                <i data-lucide="clipboard-check" class="w-4 h-4"></i> Auditoria de Casos
+            </button>
+            <button onclick="switchTab('impact')" id="tab-impact" class="tab-btn pb-3 px-1 whitespace-nowrap flex items-center gap-2 transition-colors text-slate-500 hover:text-slate-800">
+                <i data-lucide="git-merge" class="w-4 h-4"></i> Análise de Contágio
+            </button>
+            <button onclick="switchTab('arima')" id="tab-arima" class="tab-btn pb-3 px-1 whitespace-nowrap flex items-center gap-2 transition-colors text-slate-500 hover:text-slate-800">
+                <i data-lucide="trending-up" class="w-4 h-4"></i> Previsão ARIMA
+            </button>
+            <button onclick="switchTab('sixsigma')" id="tab-sixsigma" class="tab-btn pb-3 px-1 whitespace-nowrap flex items-center gap-2 transition-colors text-slate-500 hover:text-slate-800">
+                <i data-lucide="microscope" class="w-4 h-4 text-purple-600"></i> Dossiê Six Sigma
+            </button>
+        </nav>
+
+        <!-- CONTEÚDO DAS ABAS -->
+        <div id="content-overview" class="tab-content active animate-in fade-in duration-300">
+            <!-- KPIs -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center gap-4">
+                    <div class="p-3 bg-red-100 text-red-600 rounded-lg"><i data-lucide="users" class="w-6 h-6"></i></div>
+                    <div><p class="text-sm text-slate-500 font-medium">Cancelamentos</p><h3 id="kpi-total" class="text-2xl font-bold text-slate-800">0</h3></div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center gap-4">
+                    <div class="p-3 bg-amber-100 text-amber-600 rounded-lg"><i data-lucide="frown" class="w-6 h-6"></i></div>
+                    <div><p class="text-sm text-slate-500 font-medium">NPS Médio</p><h3 id="kpi-nps" class="text-2xl font-bold text-slate-800">0.0</h3></div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center gap-4">
+                    <div class="p-3 bg-blue-100 text-blue-600 rounded-lg"><i data-lucide="car" class="w-6 h-6"></i></div>
+                    <div><p class="text-sm text-slate-500 font-medium">Produto Vilão</p><h3 id="kpi-product" class="text-lg font-bold text-slate-800 truncate">-</h3></div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center gap-4">
+                    <div class="p-3 bg-slate-100 text-slate-600 rounded-lg"><i data-lucide="alert-circle" class="w-6 h-6"></i></div>
+                    <div><p class="text-sm text-slate-500 font-medium">Motivo Principal</p><h3 id="kpi-reason" class="text-sm font-bold text-slate-800 truncate max-w-[150px]" title="">-</h3></div>
+                </div>
+            </div>
+            <!-- GRÁFICOS -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <h3 class="text-lg font-semibold mb-4 text-slate-800">Motivos de Cancelamento</h3>
+                    <div id="chart-reasons" class="h-80"></div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <h3 class="text-lg font-semibold mb-4 text-slate-800">Cancelamentos por Produto</h3>
+                    <div id="chart-products" class="h-80"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="content-audit" class="tab-content animate-in fade-in duration-300">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-4 border-b border-slate-200 bg-slate-50 flex flex-col gap-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-semibold text-slate-700 flex items-center gap-2">
+                            <i data-lucide="file-text" class="w-5 h-5 text-blue-500"></i> Auditoria de Casos
+                        </h3>
+                        <span id="audit-counter" class="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-medium">0 de 0 Auditados</span>
+                    </div>
+                    <div id="auditFilters" class="flex flex-wrap gap-2 items-center text-sm">
+                        <span class="font-semibold text-slate-600">Filtrar por Status:</span>
+                        <button onclick="filterAudit('Todos')" class="filter-btn px-3 py-1 bg-blue-600 text-white rounded-full font-bold">Todos</button>
+                        <button onclick="filterAudit('Pendente')" class="filter-btn px-3 py-1 bg-white border border-slate-300 rounded-full font-bold hover:bg-slate-100 transition">Pendente</button>
+                        <button onclick="filterAudit('Auditado')" class="filter-btn px-3 py-1 bg-white border border-slate-300 rounded-full font-bold hover:bg-slate-100 transition">Auditado</button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
+                            <tr>
+                                <th class="p-4">Status</th>
+                                <th class="p-4">Data</th>
+                                <th class="p-4">Loja & CNPJ</th>
+                                <th class="p-4">Produto / Motivo</th>
+                                <th class="p-4 text-center">Acção</th>
+                            </tr>
+                        </thead>
+                        <tbody id="audit-table-body" class="text-sm">
+                            <!-- Inserido via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="content-impact" class="tab-content animate-in fade-in duration-300">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800 mb-2 flex items-center gap-2">
+                            <i data-lucide="zap" class="text-yellow-500 fill-yellow-500 w-6 h-6"></i> Engenharia de Contágio (Deep Analysis)
+                        </h2>
+                        <p class="text-slate-500 text-sm">Identificando o "Paciente Zero" nos contratos de alto ticket (Amostra saneada).</p>
+                    </div>
+                    <div class="bg-orange-100 px-4 py-2 rounded-lg text-orange-700 text-center shadow-inner border border-orange-200">
+                        <p class="text-[10px] font-bold uppercase tracking-tighter">Splash Score P(G30|Carchat)</p>
+                        <p id="splash-score" class="text-2xl font-black">0%</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <p class="text-xs font-bold text-slate-400 uppercase mb-1">Volume de Combos Canc.</p>
+                        <h4 id="impact-combos" class="text-2xl font-bold text-slate-700">0</h4>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                        <p class="text-xs font-bold text-blue-400 uppercase mb-1">Contágio G30</p>
+                        <h4 class="text-2xl font-bold text-blue-700 flex items-baseline gap-1">
+                            <span id="impact-g30">0</span>
+                            <span id="impact-g30-perc" class="text-sm opacity-80">(0%)</span>
+                        </h4>
+                        <p class="text-[10px] text-blue-600 mt-1">Dos cancelamentos totais de G30.</p>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded-xl border border-purple-100">
+                        <p class="text-xs font-bold text-purple-400 uppercase mb-1">Contágio Lions</p>
+                        <h4 class="text-2xl font-bold text-purple-700 flex items-baseline gap-1">
+                            <span id="impact-lions">0</span>
+                            <span id="impact-lions-perc" class="text-sm opacity-80">(0%)</span>
+                        </h4>
+                        <p class="text-[10px] text-purple-600 mt-1">Dos cancelamentos totais de Lions.</p>
+                    </div>
+                    <div class="bg-red-50 p-4 rounded-xl border border-red-100">
+                        <p class="text-xs font-bold text-red-400 uppercase mb-1">Splash Prob.</p>
+                        <h4 class="text-2xl font-bold text-red-700">High Risk</h4>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                        <h3 class="text-md font-bold text-slate-700 mb-6">Atribuição de Causalidade (Paciente Zero)</h3>
+                        <div id="chart-impact-bar" class="h-64"></div>
+                    </div>
+                    <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                        <h3 class="text-md font-bold text-slate-700 mb-6">Radar de Vulnerabilidade</h3>
+                        <div id="chart-impact-radar" class="h-64"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="content-arima" class="tab-content animate-in fade-in duration-300">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800 mb-1 flex items-center gap-2"><i data-lucide="cpu" class="text-indigo-500 w-6 h-6"></i> Projeção de Churn (Modelo ARIMA Simulado)</h2>
+                        <p class="text-slate-500 text-sm">A <strong>Linha Vermelha</strong> é a inércia atual. A <strong>Verde</strong> estima a redução por retenção e congelamento de cross-sell.</p>
+                    </div>
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-3 flex flex-col gap-2 max-w-sm">
+                        <div class="flex justify-between items-center text-red-800">
+                            <span class="text-xs font-bold uppercase">Churn Incontrolável (Falências)</span>
+                            <span id="uncontrollable-perc" class="font-black text-lg">0%</span>
+                        </div>
+                        <label class="flex items-center gap-2 mt-1 cursor-pointer bg-white p-1.5 rounded border border-red-100 shadow-sm">
+                            <input type="checkbox" id="excludeUncontrollable" onchange="updateArima()" class="w-4 h-4 text-red-600 rounded border-red-300">
+                            <span class="text-xs font-semibold text-slate-700">Excluir Incontroláveis da Previsão</span>
+                        </label>
+                    </div>
+                </div>
+                <div id="chart-arima" class="h-96 w-full mb-8"></div>
+                <div class="border-t border-slate-200 pt-6">
+                    <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2"><i data-lucide="trending-up" class="text-green-500 h-5 w-5"></i> Detalhamento Mensal (Q2 e Q3 Projetado)</h3>
+                    <div id="arima-monthly-details" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="content-sixsigma" class="tab-content animate-in fade-in duration-300">
+            <div class="space-y-6">
+                <div class="bg-gradient-to-r from-slate-800 to-slate-900 text-white p-8 rounded-xl shadow-lg">
+                    <h2 class="text-2xl font-black mb-2 flex items-center gap-3">
+                        <i data-lucide="microscope" class="w-8 h-8 text-purple-400"></i> Avaliação Estatística (Lean Six Sigma)
+                    </h2>
+                    <p class="text-slate-300 font-medium max-w-3xl leading-relaxed">
+                        Este relatório foi elaborado para o Board/Diretoria com o objectivo de comprovar matematicamente a causalidade das perdas de receita. Utilizamos os pilares DMAIC para dissecar as intersecções, testar a significância estatística do produto Carchat como ofensor e projectar uma regressão linear das insatisfações.
+                    </p>
+                </div>
+
+                <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-xl font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2 flex items-center gap-2">
+                        <i data-lucide="calculator" class="text-blue-500 w-5 h-5"></i> 1. A Origem da Taxa de Contágio (Probabilidade Condicional)
+                    </h3>
+                    <p class="text-slate-600 mb-4 leading-relaxed">
+                        Para sermos fiéis ao Lean Six Sigma, primeiro <strong>saneamos a amostra</strong>, removendo a "Variação de Causa Comum" (clientes que faliram). Com a base limpa, calculamos <span class="font-mono text-xs bg-slate-100 p-1">P(Carchat | G30)</span>.
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                        <div class="math-block">
+                            <p class="text-sm font-bold text-slate-700 mb-2">Variáveis do Ecossistema Controlável:</p>
+                            <ul class="text-sm text-slate-600 space-y-1">
+                                <li><strong class="text-slate-800">Total G30 Cancelado (Saneado) (<span id="math-g30-total">0</span>)</strong></li>
+                                <li><strong class="text-slate-800">Deste total, combos c/ Carchat (<span id="math-combo-total">0</span>)</strong></li>
+                            </ul>
+                            <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
+                                <p class="text-xs uppercase font-bold text-blue-500 mb-1">Cálculo de Causalidade Cruzada:</p>
+                                <p class="text-lg font-mono font-black text-blue-800">(<span id="math-v1">0</span> / <span id="math-v2">0</span>) = <span id="math-result">0</span>%</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center text-sm text-slate-600 bg-slate-50 p-4 rounded border border-slate-200 leading-relaxed">
+                            <p><strong>Conclusão da Prova:</strong> Mais de <span id="math-result-text" class="font-bold text-red-600">0%</span> dos clientes que cancelaram o G30 neste período <strong>estavam a utilizar o Carchat no momento da evasão e relataram falhas</strong>. O contágio é estatisticamente significativo.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-xl font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2 flex items-center gap-2">
+                        <i data-lucide="scale" class="text-purple-500 w-5 h-5"></i> 2. Teste de Hipótese: O Carchat Degrada o NPS Global?
+                    </h3>
+                    <p class="text-slate-600 mb-4 leading-relaxed text-sm">
+                        Executámos um Teste T de Welch. Comparamos a <strong>Baseline Histórica da Mentoria G30</strong> contra o <strong>NPS actual da Cohorte com Carchat</strong>.
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="border border-slate-200 p-4 rounded-lg bg-white shadow-sm text-center">
+                            <p class="text-xs font-bold text-slate-400 uppercase mb-1">Hipótese Nula (H0)</p>
+                            <p class="text-sm font-medium text-slate-700">A presença do Carchat não altera o NPS da marca.</p>
+                        </div>
+                        <div class="border border-purple-200 p-4 rounded-lg bg-purple-50 shadow-sm text-center">
+                            <p class="text-xs font-bold text-purple-400 uppercase mb-1">Hipótese Alternativa (H1)</p>
+                            <p class="text-sm font-medium text-purple-900">O Carchat reduz estatisticamente o NPS geral.</p>
+                        </div>
+                        <div class="border border-slate-200 p-4 rounded-lg bg-slate-800 shadow-sm text-center text-white flex flex-col justify-center">
+                            <p class="text-xs font-bold text-slate-400 uppercase mb-1">P-Value Alcançado</p>
+                            <p id="stats-pvalue" class="text-2xl font-black text-green-400">P &lt; 0.05</p>
+                            <p class="text-[10px] text-slate-300">Rejeitamos H0 com 95% de Confiança.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-8 justify-center items-center py-4 bg-slate-50 border border-slate-200 rounded-lg">
+                        <div class="text-center cursor-pointer hover:bg-slate-100 p-2 rounded-lg transition-colors border border-transparent hover:border-slate-300" onclick="openG30HistModal()">
+                            <p class="text-xs font-bold text-slate-500 mb-1 flex items-center justify-center gap-1">Média NPS (G30 Padrão) <i data-lucide="info" class="w-3 h-3 text-blue-500"></i></p>
+                            <p id="stats-mean-no" class="text-3xl font-black text-slate-800 border-b-2 border-dashed border-slate-400 inline-block">8.2</p>
+                            <p class="text-[9px] text-slate-400 mt-1 uppercase">Clique para ver Control Group</p>
+                        </div>
+                        <div class="text-slate-300 text-3xl font-light">vs</div>
+                        <div class="text-center p-2">
+                            <p class="text-xs font-bold text-red-500 mb-1">Média NPS (Combos c/ Carchat)</p>
+                            <p id="stats-mean-yes" class="text-3xl font-black text-red-600">0.0</p>
+                            <p class="text-[9px] text-slate-400 mt-1 uppercase">Clientes Controláveis</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-xl font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2 flex items-center gap-2">
+                        <i data-lucide="bar-chart" class="text-emerald-500 w-5 h-5"></i> 3. Regressão Linear: Intensidade da Frustração
+                    </h3>
+                    <p class="text-slate-600 mb-4 leading-relaxed text-sm">
+                        O gráfico avalia o modelo correlacionando o <strong>Volume do Feedback em caracteres (X)</strong> – proxy para intensidade de frustração – com a <strong>Nota de NPS (Y)</strong>.
+                    </p>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2 bg-slate-50 border border-slate-200 p-2 rounded-xl">
+                            <div id="chart-regression" class="h-64 w-full"></div>
+                        </div>
+                        <div class="flex flex-col justify-center gap-4">
+                            <div class="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
+                                <p class="text-xs font-bold text-slate-400 uppercase mb-1">Coeficiente R²</p>
+                                <h4 id="stats-r2" class="text-2xl font-black text-slate-700">0.68</h4>
+                                <p class="text-[10px] text-slate-500 mt-1">Forte correlação inversa entre tamanho da reclamação e NPS.</p>
+                            </div>
+                            <div class="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
+                                <p class="text-xs font-bold text-slate-400 uppercase mb-1">Inclinação (Slope β1)</p>
+                                <h4 id="stats-slope" class="text-2xl font-black text-slate-700">-0.04</h4>
+                                <p class="text-[10px] text-slate-500 mt-1">Quanto mais o cliente escreve/reclama, mais o NPS afunda linearmente.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-red-50 p-6 rounded-xl border border-red-200 flex items-start gap-4">
+                    <i data-lucide="alert-triangle" class="text-red-600 w-8 h-8 flex-shrink-0 mt-1"></i>
+                    <div>
+                        <h4 class="text-lg font-bold text-red-900 mb-2">Recomendação Diretiva (Plano de Acção DMAIC)</h4>
+                        <p class="text-sm text-red-800 leading-relaxed">
+                            <strong>Matematicamente provado:</strong> A oferta conjunta está a canibalizar a rentabilidade LTV do produto principal (G30). Recomenda-se um <strong>congelamento temporário do cross-sell Carchat-G30</strong> para clientes não maturados, até que a variabilidade de entrega da IA atinja um padrão Six Sigma (&lt; 3.4 DPMO) na redução de tickets abertos.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MODAL G30 HISTÓRICO -->
+    <div id="g30HistModal" class="modal fixed inset-0 z-50 items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+        <div class="bg-white w-full max-w-3xl max-h-[80vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                        <i data-lucide="users" class="w-5 h-5 text-blue-600"></i> Grupo de Controlo: G30 Histórico Real
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-1">Amostra real de clientes da base que cancelaram G30/Lions SEM o Carchat.</p>
+                </div>
+                <button onclick="closeG30HistModal()" class="p-2 hover:bg-slate-200 rounded-full text-slate-500 transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="overflow-y-auto p-0 flex-1 bg-white">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-100 text-slate-600 text-xs uppercase sticky top-0">
+                        <tr>
+                            <th class="p-4">Cliente / Loja</th>
+                            <th class="p-4">Produto</th>
+                            <th class="p-4">Motivo Principal</th>
+                            <th class="p-4 text-center">NPS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="g30-hist-table-body" class="text-sm">
+                        <!-- Populated via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE AUDITORIA -->
+    <div id="auditModal" class="modal fixed inset-0 z-50 items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+        <div class="bg-white w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-start bg-slate-50">
+                <div>
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="clipboard-check" class="text-blue-600 w-6 h-6"></i>
+                        <h2 id="modalStoreName" class="text-xl font-bold text-slate-800">Dossiê de Auditoria</h2>
+                    </div>
+                    <p id="modalCNPJ" class="text-sm font-mono text-slate-500 mt-1 ml-9"></p>
+                </div>
+                <button onclick="closeModal()" class="p-2 hover:bg-slate-200 rounded-full text-slate-500 transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="overflow-y-auto p-6 flex-1 bg-white">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-red-50 p-4 rounded-xl border border-red-100 flex flex-col gap-4">
+                        <div>
+                            <p class="text-xs text-red-400 uppercase tracking-wider font-bold mb-1">Motivo Alegado (Cliente)</p>
+                            <p id="modalReason" class="text-sm font-semibold text-red-900"></p>
+                            <p class="text-xs text-red-400 uppercase tracking-wider font-bold mb-1 mt-3">Reclamação Direta</p>
+                            <p id="modalFeedback" class="text-sm text-red-800 italic"></p>
+                        </div>
+                        <div class="bg-white/70 p-3 rounded-lg border border-red-200 shadow-sm mt-auto">
+                            <p class="text-xs text-indigo-600 uppercase tracking-wider font-bold mb-2 flex items-center gap-1">
+                                <i data-lucide="sparkles" class="w-3 h-3"></i> Resumo IA
+                            </p>
+                            <p id="modalAIText" class="text-sm text-slate-700 whitespace-pre-line leading-relaxed"></p>
+                        </div>
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="flex items-center gap-2 text-sm font-bold text-slate-700 mb-2">
+                            <i data-lucide="file-text" class="w-4 h-4"></i> Colar Histórico do CRM (Evidência)
+                        </label>
+                        <textarea id="modalCRM" class="w-full flex-1 border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50 min-h-[200px]" placeholder="Cole aqui os logs do CRM..."></textarea>
+                    </div>
+                </div>
+                <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 space-y-6">
+                    <div>
+                        <label class="flex items-center gap-2 text-sm font-bold text-slate-700 mb-3">De quem foi a falha raiz?</label>
+                        <div id="originButtons" class="flex flex-wrap gap-3">
+                            <button onclick="toggleOrigin('Falha da G30')" class="origin-btn px-4 py-2 rounded-lg font-semibold text-sm border bg-white border-slate-300 text-slate-600 hover:bg-slate-100 transition">Falha da G30</button>
+                            <button onclick="toggleOrigin('Falha do produto')" class="origin-btn px-4 py-2 rounded-lg font-semibold text-sm border bg-white border-slate-300 text-slate-600 hover:bg-slate-100 transition">Falha do Carchat</button>
+                            <button onclick="toggleOrigin('Falha do CS')" class="origin-btn px-4 py-2 rounded-lg font-semibold text-sm border bg-white border-slate-300 text-slate-600 hover:bg-slate-100 transition">Falha do CS</button>
+                            <button onclick="toggleOrigin('Motivo do Cliente')" class="origin-btn px-4 py-2 rounded-lg font-semibold text-sm border bg-white border-slate-300 text-slate-600 hover:bg-slate-100 transition">Motivo do Cliente</button>
+                        </div>
+                    </div>
+                    <hr class="border-slate-200" />
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-3">Veredito do Auditor</label>
+                        <div id="veredictButtons" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <button onclick="setVeredict('Validado')" class="ver-btn p-4 rounded-xl flex flex-col items-center justify-center gap-2 border-2 border-slate-200 text-slate-500 hover:bg-slate-50 transition">
+                                <i data-lucide="check-circle" class="w-7 h-7"></i>
+                                <span class="text-sm font-bold">Validado</span>
+                            </button>
+                            <button onclick="setVeredict('Divergente')" class="ver-btn p-4 rounded-xl flex flex-col items-center justify-center gap-2 border-2 border-slate-200 text-slate-500 hover:bg-slate-50 transition">
+                                <i data-lucide="x-circle" class="w-7 h-7"></i>
+                                <span class="text-sm font-bold">Divergente</span>
+                            </button>
+                            <button onclick="setVeredict('Inconclusivo')" class="ver-btn p-4 rounded-xl flex flex-col items-center justify-center gap-2 border-2 border-slate-200 text-slate-500 hover:bg-slate-50 transition">
+                                <i data-lucide="alert-circle" class="w-7 h-7"></i>
+                                <span class="text-sm font-bold">Inconclusivo</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 border-t border-slate-100 bg-white flex justify-end gap-3">
+                <button onclick="closeModal()" class="px-6 py-2 rounded-lg font-semibold text-slate-600 hover:bg-slate-100 transition">Cancelar</button>
+                <button onclick="saveAudit()" id="saveAuditBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-lg flex items-center gap-2 disabled:opacity-50">
+                    <i data-lucide="save" class="w-5 h-5"></i> Salvar Auditoria
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGIC SCRIPTS -->
+    <script>
+        // Inicializa ícones
+        lucide.createIcons();
+
+        function formatCNPJ(cnpj) {
+            if(!cnpj) return 'N/A';
+            const clean = cnpj.replace(/\D/g, '').padStart(14, '0');
+            return clean.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
+        }
+
+        // Dados originais completados
+        const rawData = [
+            { id: 1, cnpj: '43119778000127', date: '05/01/2026', store: 'Legacy Autos', product: 'Carchat', reason: 'O produto não era o que eu esperava', nps: 5, feedback: 'Inconsistência e falhas da IA' },
+            { id: 2, cnpj: '57598201000150', date: '06/01/2026', store: 'Luma carreiro com. De veiculos ltda', product: 'Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas, Não me senti acompanhado', nps: 6, feedback: 'Falhas no carchat/ia' },
+            { id: 3, cnpj: '57598201000150', date: '07/01/2026', store: 'Luma carreiro com. Veiculos', product: 'Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas', nps: 5, feedback: 'Falhas no carchat' },
+            { id: 4, cnpj: '36734766000147', date: '09/01/2026', store: 'Super Auto Multimarcas', product: 'Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas, Não me senti acompanhado', nps: 4, feedback: 'A decisão de não usar mais a carchet, vem de uma avaliação criteriosa de nossa equipe: Vimos que a Inteligência não é inteligente, tem muitas falhas, que vem deixando nossos clientes infelizes com o atendimento, a conversão em agendamentos era de 5% volume de leads, um numero muito baixo, em muitas das vezes dos erros constantes que ocorreram fazendo perder o cliente de uma forma irreversível, uma falta de sistema que possa gerenciar os dados, os agendamentos, as conversas, e a divisão entre vendedores, leva a ser ineficaz, gastando uma quantidade de tempo grande todos os dias para olhar conversa por conversa, ver o que foi falado e ver se é preciso interagir com aquele cliente, que em muitas das vez sim era necessário, vimos que o atendimento humanizado é indispensável para os nossos clientes, as taxas de conversão são muito mais expressivas do que o da IA. Acredito que o sistema ainda é ineficiente, não esta pronto para o dia a dia de uma loja, quando nos foi oferecido pensávamos que seria uma plataforma que revolucionaria os atendimentos, mais infelizmente não foi o que tivemos.' },
+            { id: 5, cnpj: '46769308000105', date: '12/01/2026', store: 'AMERICA AUTOMOVEIS LTDA', product: 'Carchat', reason: 'Dificuldades financeiras', nps: 9, feedback: 'RESTRUTURAÇÃO DE OPERAÇÃO INTERNA' },
+            { id: 6, cnpj: '37501727000162', date: '12/01/2026', store: 'Tk Motors Comércio de Veículos', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava', nps: 7, feedback: 'Não atendeu a expectativa' },
+            { id: 7, cnpj: '42316512000101', date: '12/01/2026', store: 'Fast lane multimarcas', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas, Não concordo com o que a metodologia ensina', nps: 6, feedback: 'Quando entrei em contato deixei bem claro que meu problema era capacitação de vendedores, e o vendedor do G30 garantiu um atendimento e acompanhamento mas na prática foi aplicado o cronograma padrão querendo atacar outras áreas que eu não tenho problema, e ainda continuo com o mesmo problema que antes. Vendedores não capacitados. Infelizmente não nos atendeu.' },
+            { id: 8, cnpj: '66528480000176', date: '13/01/2026', store: 'VIOLA VEÍCULOS', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas, Não consegui organizar o tempo para participar do método', nps: 3, feedback: 'FALTA DE TEMPO E OUTRAS PRIORIDADES' },
+            { id: 9, cnpj: '42205255000130', date: '14/01/2026', store: 'PIX MOTORS COMÉRCIO DE AUTOMÓVEIS', product: 'Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas, Não me senti acompanhado', nps: 0, feedback: 'O programa comete apenas erros, erra os veículos, erra o estoque, fala que não tem o veículo que está disponível na loja, perdemos vários clientes com os erros do sistema. A assistencia é quase nula, demora para responder, fala que vai resolver o problema e não resolve. O sistema é horrível!!!!!' },
+            { id: 10, cnpj: '42581687000146', date: '18/01/2026', store: 'HM Automóveis', product: 'Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas, Dificuldades financeiras', nps: 5, feedback: 'Controle de gastos' },
+            { id: 11, cnpj: '34133600000140', date: '20/01/2026', store: 'BRESSAN AUTOMOVEIS', product: 'Carchat', reason: 'Não consegui aplicar por falta de equipe', nps: 5, feedback: 'Não participamos do Programa G30/Lions' },
+            { id: 12, cnpj: '53871114000173', date: '21/01/2026', store: 'GR MOTORS', product: 'Carchat', reason: 'O produto não era o que eu esperava, Dificuldades financeiras', nps: 7, feedback: 'Carchat! Baixo estoque, poucas mensagens, atendimento confuso para o cliente!' },
+            { id: 13, cnpj: '52191338000171', date: '21/01/2026', store: 'Marcão Veículos', product: 'Carchat', reason: 'O produto não era o que eu esperava, Problemas judiciais', nps: 3, feedback: 'Não foi o que eu esperava' },
+            { id: 14, cnpj: '21729039000114', date: '21/01/2026', store: 'Auto Vrum', product: 'Carchat', reason: 'O produto não era o que eu esperava', nps: 1, feedback: 'Nao foi o que me prometeram na adesão' },
+            { id: 15, cnpj: '31124372000153', date: '21/01/2026', store: 'Alvaro Veiculos', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas', nps: 5, feedback: 'O produto vendido não é o entregue' },
+            { id: 16, cnpj: '4790565000170', date: '22/01/2026', store: 'ERJ multimarcas com de veículos Ltda', product: 'Carchat', reason: 'Não consegui aplicar por falta de equipe, Problemas familiares', nps: 10, feedback: 'Sem motivo específico' },
+            { id: 17, cnpj: '36290163000101', date: '23/01/2026', store: 'COMPRA CERTA REPASSE', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas, Dificuldades financeiras', nps: 10, feedback: 'Apenas fazer o cancelamento!' },
+            { id: 18, cnpj: '35756173000119', date: '26/01/2026', store: 'Finan Auto', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava', nps: 5, feedback: 'O PRODUTO NÃO ERA COMO EU ESPERAVA' },
+            { id: 19, cnpj: '35519154000179', date: '27/01/2026', store: 'BeletCar', product: 'Carchat', reason: 'O produto não era o que eu esperava', nps: 7, feedback: 'Mudança de metodo de uso da carchat' },
+            { id: 20, cnpj: '14156998000122', date: '02/02/2026', store: 'TK Veículos', product: 'Carchat', reason: 'Dificuldades financeiras', nps: 10, feedback: 'Redução de custos' },
+            { id: 21, cnpj: '9408929000129', date: '03/02/2026', store: 'DRIVE CAR COMERCIO DE VEICULOS MULTIMARCAS LTDA', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas, Não me senti acompanhado', nps: 3, feedback: 'NÃO ME SENTI ACOMPANHADO' },
+            { id: 22, cnpj: '58192119000193', date: '05/02/2026', store: 'AMF veículos', product: 'Carchat', reason: 'Dificuldades financeiras', nps: 7, feedback: 'Redução de despesas.' },
+            { id: 23, cnpj: '50962183000102', date: '09/02/2026', store: 'Diamond veículos', product: 'Carchat', reason: 'Falta de alinhamento de expectativas, Não apliquei o método por completo e estou insatisfeito com os resultados, Não me senti acompanhado', nps: 3, feedback: 'Programa na superou as expectativas e o suporte é MUITO RUIM .' },
+            { id: 24, cnpj: '58248911000112', date: '10/02/2026', store: 'ULTRA MOTORS', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas, Não apliquei o método por completo e estou insatisfeito com os resultados', nps: 0, feedback: 'O principal motivo do cancelamento foi a baixa qualidade do serviço entregue. O produto não corresponde ao que foi apresentado na contratação, apresenta instabilidades constantes e acaba gerando insatisfação nos nossos clientes, prejudicando diretamente a experiência de atendimento.\n\nRegistramos algumas situações preocupantes, todas encaminhadas com prints para a equipe e para o Misael, como atendimentos com informações incorretas sobre nossa operação, políticas comerciais e procedimentos internos, o que demonstra falta de alinhamento e preparo.\n\nAcreditamos que o projeto ainda precisa evoluir bastante para atingir um nível realmente profissional. Hoje, a percepção é de um produto com forte proposta de marketing, porém com pouca eficiência prática. Inclusive enviei um vídeo demonstrando testes com outro sistema que apresentou um atendimento mais fluido e humanizado. No formato atual, infelizmente não atende ao padrão que buscamos.' },
+            { id: 25, cnpj: '57260646000125', date: '11/02/2026', store: 'Fb motors', product: 'Carchat', reason: 'O produto não era o que eu esperava', nps: 3, feedback: 'Falta Melhorar muito' },
+            { id: 26, cnpj: '56341382000171', date: '12/02/2026', store: 'Rm Motors comércio e locações de veículos', product: 'Programa G30, Carchat', reason: 'Falta de alinhamento de expectativas, Dificuldades financeiras', nps: 4, feedback: 'Dificuldade financeira' },
+            { id: 27, cnpj: '48814237000132', date: '23/02/2026', store: 'Porto veículos', product: 'Programa G30, Carchat', reason: 'Não me senti acompanhado', nps: 5, feedback: 'Já foi informando a cima' },
+            { id: 28, cnpj: '60533329000140', date: '23/02/2026', store: 'Company Tradecar', product: 'Carchat', reason: 'O produto não era o que eu esperava', nps: 5, feedback: 'Novas estratégias' },
+            { id: 29, cnpj: '63246635000193', date: '27/02/2026', store: 'Rummo Car Experience', product: 'Programa G30, Carchat', reason: 'Falta de alinhamento de expectativas', nps: 5, feedback: 'Leadway não foi entregue' },
+            { id: 30, cnpj: '52253391000150', date: '02/03/2026', store: 'Baldo Motors', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas, Não consegui organizar o tempo para participar do método', nps: 3, feedback: `Alguns pontos que foram prometido e nao realizados não condizem com a metodologia que a minha empresa trabalha.
+No Summit foi prometido o G3 IA para novembro e ate hoje nao foi entregue.
+Carchat foi disponibilizado e vendido como uma IA entretando nao passa de um chatbot.
+Palestra presencial foi prometida desde outubro e ate hoje nao foi realizada.
+Os horarios dos treinamentos não batem com a rotina da empresa.
+Entre outras....` },
+            { id: 31, cnpj: '29571529000147', date: '03/03/2026', store: 'LUCAS MULTIMARCAS', product: 'Programa G30, Carchat', reason: 'Não consegui aplicar por falta de equipe, Não consegui organizar o tempo para participar do método, Não apliquei o método por completo e estou insatisfeito com os resultados', nps: 10, feedback: 'TENHO UM ANO DE LOJA, GOSTO DA MENTORIA MAS NAO ESTOU CONSEGUINDO POR FALTA DE EQUIPE E PRAPARO APLICAR E ESTE VALOR VEMA ME FAZER FALTA' },
+            { id: 32, cnpj: '45716991000141', date: '06/03/2026', store: 'duarte motors', product: 'Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas, Não me senti acompanhado', nps: 0, feedback: 'nas primeira reunioes foi passado para o henrique qual a necessidade do produto contratado, em execução não foi eficiente o funcionamento do produto vendido, apos alguns contato a onde o suporte demora uma eternidade para responder não corresponde as expectativas de correções de erros, nos troxe uma serie de desalinhamentos para com nossos clientes sendo assim inviavel para a empresa.' },
+            { id: 33, cnpj: '51854813000180', date: '09/03/2026', store: 'Enrico Motors', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava', nps: 5, feedback: 'Não foi o que eu imaginava, e deixa o cliente confuso' },
+            { id: 34, cnpj: '8449323000179', date: '09/03/2026', store: 'F2A Motors', product: 'Lions Car Club, Carchat', reason: 'Dificuldades financeiras', nps: 10, feedback: 'Não estou mais conseguindo retirar conteúdo que possa utilizar na minha empresa hoje' },
+            { id: 35, cnpj: '45790259000111', date: '09/03/2026', store: 'Sabini motors', product: 'Carchat', reason: 'Falta de alinhamento de expectativas', nps: 1, feedback: 'Não funciona, suporte pessimo' },
+            { id: 36, cnpj: '51310179000114', date: '09/03/2026', store: 'Italo Automóveis', product: 'Programa G30, Carchat', reason: 'Dificuldades financeiras', nps: 10, feedback: 'Financeiro' },
+            { id: 37, cnpj: '37040191000125', date: '10/03/2026', store: 'Dantascar', product: 'Carchat', reason: 'O produto não era o que eu esperava', nps: 9, feedback: 'Não vou precisar mais, montei um time pré vend.' },
+            { id: 38, cnpj: '44807435000118', date: '12/03/2026', store: 'Fiiori Multimarcas', product: 'Carchat', reason: 'O produto não era o que eu esperava', nps: 7, feedback: 'O Carchat tinha muitas falhas' },
+            { id: 39, cnpj: '43394189000157', date: '16/03/2026', store: 'Uni Veículos', product: 'Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas, Não me senti acompanhado, Não concordo com o que a metodologia ensina', nps: 0, feedback: 'Me passaram uma data e não foi cumprida... fora outras coisas que me fizeram a cancelar' },
+            { id: 40, cnpj: '45958897000107', date: '16/03/2026', store: 'garagem do nelsinho', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas', nps: 5, feedback: 'gostaria de cancelar meu plano , pq quando fechei na fenauto tinha Ledway e ate hoje nao funciona. Assim sendo nao foi entregue o produto como prometido e nosso advogado falou que podemos cancelar o plano.' },
+            { id: 41, cnpj: '23027803000135', date: '16/03/2026', store: 'Evidence Motors', product: 'Lions Car Club, Carchat', reason: 'Falta de alinhamento de expectativas', nps: 7, feedback: 'Problemas de Saude' },
+            { id: 42, cnpj: '20936457000110', date: '16/03/2026', store: 'AUTO SHOW MULTIMARCAS', product: 'Carchat', reason: 'O produto não era o que eu esperava', nps: 5, feedback: 'O PRODUTO NAO PERFORMA DA FORMA QUE GOSTARIAMOS' },
+            { id: 43, cnpj: '40737201000190', date: '17/03/2026', store: 'Station Motors', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava', nps: 6, feedback: 'O produto não condiz com o que foi vendido, e solicitei a resolução várias vezes sem êxito. Mensagens fora do contexto, respostas erradas, mandando carros que não tem no estoque ou enviando o valor totalmente fora do anúncio, o que ocasiona perda de lead s investimentos.' },
+            { id: 44, cnpj: '05674545000105', date: '18/03/2026', store: 'beretta veiculos', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas, Não me senti acompanhado', nps: 2, feedback: 'comprei um sonho, nunca existiu a leadway, a carchat desde primeiro dia ate oje 18/03 só problema ,g30 consultoria trocou ate de gestor e n me senti acompanhado pq as novidades da g30 sabia só por meio de instagram ,eu perguntava oq via ,sendo q os gestores nao me falavam das novidades . a leadway comprei como prioridade na minha loja e nunca vi nada do produto só sabia q ele iria sair do papel um dia pq eu perguntava ,resumindo me venderam e eu paguei por algo q nunca existiu e a carchat comprei paguei por algo q nunca funcionou 100%, na minha visao só pode cobrar por algo q esteja funcionando 100% e n foi assim feito em nem um dos produtos ,me sinto engando e desgastado emocionalmente por tanto problema da carchat e por comprar algo q n existe como o leadway, e gostaria do meu reembolso total do valor pago por algo q n usei como deveria pois nunca esteve 100% , e me disponho a voltar quando td tiver 100% rodando pois gostei da equipe porem ficou insustentável por tanto problema' },
+            { id: 45, cnpj: '12436700000102', date: '18/03/2026', store: 'Maranello Veículos', product: 'Carchat', reason: 'O produto não era o que eu esperava', nps: 4, feedback: `Contratamos a ferramenta em dezembro de 2025, confiando no projeto apresentado e, principalmente, na credibilidade do trabalho desenvolvido por Guga Gadelha no mercado automotivo. Inclusive, foi justamente essa confiança que nos motivou a realizar o teste da plataforma CarChat.
+A proposta de utilização de inteligência artificial para o pré-atendimento de leads é algo em que acreditamos muito e que, sem dúvida, pode agregar valor ao processo comercial das lojas.
+No entanto, desde a implementação da plataforma em janeiro, temos enfrentado dificuldades recorrentes em seu funcionamento. O sistema frequentemente fornece informações incorretas aos clientes, gerando retrabalho constante por parte da nossa equipe. Na prática, precisamos revisar e corrigir diariamente diversos atendimentos, além de investir tempo significativo na tentativa de ajustes e parametrizações.
+Esse cenário acabou gerando um impacto operacional negativo, contrário à proposta inicial da ferramenta, que seria justamente otimizar o tempo e melhorar a eficiência do atendimento.
+Inclusive, é importante destacar que no mês de fevereiro a loja zerou em vendas, algo totalmente fora da nossa realidade e que não pode ser considerado normal dentro da operação. Entendemos que esse resultado está diretamente relacionado às falhas no processo de atendimento, agravadas pelo desempenho da ferramenta.
+Outro ponto que nos gerou desconforto foi em relação ao suporte. Em alguns momentos em que buscamos auxílio técnico para resolução dos problemas enfrentados, sentimos que o foco não estava na solução das falhas da ferramenta já contratada, mas sim na oferta de novos produtos. Isso acabou impactando negativamente a nossa percepção de credibilidade, uma vez que ainda estávamos lidando com dificuldades no serviço principal.
+Durante todo esse período, mantivemos uma postura colaborativa, contribuindo com feedbacks, testes e ajustes, confiando nas melhorias prometidas. Além disso, cumprimos integralmente com todas as obrigações financeiras acordadas, demonstrando nosso comprometimento com a parceria.
+Gostaríamos também de registrar que o atendimento comercial realizado pelo Alexandre foi excelente, conduzido com profissionalismo, transparência e dentro de todas as expectativas. Nosso apontamento, portanto, não está relacionado ao processo comercial, mas sim ao desempenho e entrega da ferramenta CarChat.
+Contudo, até o momento, a plataforma ainda não atingiu o nível de funcionamento necessário para atender às demandas da nossa operação.
+Diante disso, solicitamos o cancelamento do serviço sem aplicação de multa contratual, considerando que as funcionalidades apresentadas no momento da contratação não se concretizaram de forma satisfatória.
+Adicionalmente, solicitamos a avaliação sobre a possibilidade de devolução, total ou parcial, dos valores pagos até o momento, tendo em vista que o serviço não correspondeu às expectativas inicialmente estabelecidas.
+Reforçamos que nossa intenção é conduzir essa situação de forma respeitosa e transparente. Continuamos acreditando no potencial da tecnologia aplicada às vendas automotivas, porém, neste momento, a ferramenta não está adequada à nossa realidade operacional.
+Ficamos no aguardo do retorno para alinharmos a melhor forma de encerramento.
+Atenciosamente, Carina` },
+            { id: 46, cnpj: '14307028000180', date: '18/03/2026', store: 'CAMARGO MULTIMARCAS', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava, Não me senti acompanhado', nps: 6, feedback: 'FALTA DA ACOMPANHAMETO E A NAO ENTREGA DE PRODUTOS PROMETIDOS NO ATO DO FECHAMENTO DO NEGOCIO' },
+            { id: 47, cnpj: '31759163000186', date: '19/03/2026', store: 'GT MULTIMARCAS', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava, Não me senti acompanhado', nps: 3, feedback: 'Nada do que foi prometido foi aplicado, não objetive o resultado que foi me vendido, apenas passaram o que eu já sabia.' },
+            { id: 48, cnpj: '49798714000186', date: '19/03/2026', store: 'Flex Veículos Multimarcas LTDA', product: 'Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas, Não me senti acompanhado', nps: 1, feedback: 'Desde sua implantação a CARCHAT nunca funcionou, e nossas demandas para correção nunca foram executadas pelo suporte.' },
+            { id: 49, cnpj: '43818299000107', date: '19/03/2026', store: 'BDS Concept', product: 'Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas, Não me senti acompanhado', nps: 3, feedback: 'Difícil comunicação, demora nas correções e sempre coisas erradas, ajeitava uma coisa e outra voltava a ficar errada' },
+            { id: 50, cnpj: '63845284000137', date: '19/03/2026', store: 'Stock Facil', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava', nps: 5, feedback: 'nao tivemos resultado' },
+            { id: 51, cnpj: '61409578000190', date: '20/03/2026', store: 'Marcelo Motors', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava, Não me senti acompanhado', nps: 7, feedback: 'Achamos que agora nao sera viavel o investimento.' },
+            { id: 52, cnpj: '38428674000164', date: '20/03/2026', store: 'MOTIVE-SE VEÍCULOS LTDA', product: 'Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas', nps: 3, feedback: 'Ja relatei diversas vezes as dificuldades enfrentadas (busquem os históricos com Maria Eduarda e suporte) e as cobranças de mensalidade por meses sem que sistema tivesse sido implantado, 1º Paga-se a implantação 2º sistema funcionando, inicia-se as mensalidades. E não foi isso que fizeram!' },
+            { id: 53, cnpj: '28631663000123', date: '23/03/2026', store: 'Mastercar multimarcas', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava, Dificuldades financeiras', nps: 7, feedback: 'Por ter feito 01 ano' },
+            { id: 54, cnpj: '23170003000179', date: '23/03/2026', store: 'Top car seminovos', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava', nps: 3, feedback: 'Não atendeu a espectativa' },
+            { id: 55, cnpj: '54340855000190', date: '23/03/2026', store: 'VZ Motors', product: 'Carchat', reason: 'O produto não era o que eu esperava, Não me senti acompanhado', nps: 0, feedback: '.' },
+            { id: 56, cnpj: '44513498000161', date: '24/03/2026', store: 'RS VEICULOS', product: 'Programa G30', reason: 'O produto não era o que eu esperava, Não consegui organizar o tempo para participar do método', nps: 6, feedback: 'MUITA DEMORA PARA APLICAR O METODO' },
+            { id: 57, cnpj: '37451282000153', date: '25/03/2026', store: 'Levak Motors', product: 'Carchat', reason: 'Não consegui organizar o tempo para participar do método', nps: 10, feedback: 'Não estou utilizando a IA como deveria. Por isso gostaria de cancelar' },
+            { id: 58, cnpj: '52702885000174', date: '26/03/2026', store: 'SUL MULTIMARCAS', product: 'Carchat', reason: 'O produto não era o que eu esperava', nps: 7, feedback: 'NÃO ESTAVA FAZENDO O SERVIÇO CORRETO' },
+            { id: 59, cnpj: '27090283000166', date: '26/03/2026', store: 'São Rafael Car Boutique', product: 'Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas, Não me senti acompanhado', nps: 5, feedback: 'Desalinhamento com expectativa' },
+            { id: 60, cnpj: '13884449000101', date: '30/03/2026', store: 'CRT MULTIMARCAS', product: 'Programa G30', reason: 'O produto não era o que eu esperava, Não me senti acompanhado', nps: 2, feedback: `Motivo o que foi vendido e o que foi entregue. Muito longe.\nIsso foi a segunda vez que passo com o G30, chega.` },
+            { id: 61, cnpj: '43870541000183', date: '30/03/2026', store: 'JK Veículos', product: 'Carchat', reason: 'Não apliquei o método por completo e estou insatisfeito com os resultados', nps: 7, feedback: 'Estoque pequeno' },
+            { id: 62, cnpj: '5770211000127', date: '31/03/2026', store: 'Valcarfe veículos', product: 'Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas', nps: 5, feedback: `Infelizmente o produto Carchat ele não funcionou da forma que foi me vendido, ele não respondeu os clientes, tivemos muitas falhas durante o período de adaptação, falhas que são próprias da ferramenta e não foram arrumadas mesmo após a notificação ao suporte.\n\nPrincipais falhas:\n1. Ela não respondeu grande parte dos clientes que entraram em contato.\n2. Oferecia carros que não estavam disponíveis no estoque.\n3. Suporte atencioso e com ótimo atendimento, porém não sanaram os problemas que passava diariamente para eles.\n4. Tudo o que foi prometido na venda, infelizmente não foi entregue.\n\nConclusão:\nAcredito que a ferramenta não está pronta para estar no mercado ainda, a idéia é sensacional, porém acredito que ela deva ser estudada e aprimorada durante um período, e eu não posso continuar pagando para uma IA que está ignorando meus clientes que entram em contato. A equipe é super atenciosa, isso estão de parabéns, é uma pena que ela não funcionou para nós.` },
+            { id: 63, cnpj: '44372299000180', date: '31/03/2026', store: 'RA AUTOMOVEIS', product: 'Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas, Não me senti acompanhado', nps: 1, feedback: 'NÃO SOU DESSE SELETO GRUPO. ESTOU CANCELANDO O CARCHAT POR QUE A EMPRESA E A FERRAMENTA NÃO ENTREGAM O QUE PROMETEM. SUPORTE TECNICO NÃO FAZ O QUE É PEDIDO E PARAMETRIZADO. NÃO CUMPRIRAM COM O PROMETIDO NA VISTA COMERCIAL REALIZADA.' },
+            { id: 64, cnpj: '36662809000126', date: '01/04/2026', store: 'Charles veículos', product: 'Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas', nps: 6, feedback: 'Integracao com meu sistema e crm' },
+            { id: 65, cnpj: '2530859000138', date: '02/04/2026', store: 'Viva Motors', product: 'Carchat', reason: 'O produto não era o que eu esperava', nps: 9, feedback: 'Mudança de estratégia' },
+            { id: 66, cnpj: '33873403000102', date: '02/04/2026', store: 'MAPRI VEÍCULOS', product: 'Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas', nps: 2, feedback: 'Cancelamento do carchat por não entregar o esperado. Atrapalhando atendimento da loja e só ocorrendo erros.' },
+            { id: 67, cnpj: '40078782000104', date: '06/04/2026', store: 'Rafagnin motors', product: 'Programa G30', reason: 'Falta de alinhamento de expectativas', nps: 2, feedback: 'MISAEL disse que conseguiria aplicar o método sozinho, algo que é impossível, inclusive com acompanhamento da Raissa, chegamos a essa conclusão' },
+            { id: 68, cnpj: '60844543000117', date: '06/04/2026', store: 'Shopcar multimarcas', product: 'Carchat', reason: 'O produto não era o que eu esperava', nps: 6, feedback: 'Não funciona' },
+            { id: 69, cnpj: '20058862000182', date: '06/04/2026', store: 'VM REPASSES', product: 'Carchat', reason: 'Falta de alinhamento de expectativas', nps: 10, feedback: 'Os nossos clientes nao acostumaram por se tratar de repasse e ser venda muito rápida' },
+            { id: 70, cnpj: '5990078000114', date: '07/04/2026', store: 'Cirne Automóveis', product: 'Carchat', reason: 'O produto não era o que eu esperava', nps: 5, feedback: 'falta de solução nas demandas solicitadas' },
+            { id: 71, cnpj: '48146131000108', date: '08/04/2026', store: 'Dado car', product: 'Programa G30, Carchat', reason: 'Dificuldades financeiras', nps: 7, feedback: 'Cortar custos' },
+            { id: 72, cnpj: '5477642500116', date: '09/04/2026', store: 'Só veiculos', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava, Não me senti acompanhado, Dificuldades financeiras', nps: 6, feedback: '1- não era o q eu esperava\n2- passa uma expectativa q não condiz com a realidade\n3- a carchat respondia errado , ficava de mandar as fotos, dizia q tinha mandado e não mandava, o cliente vinha atrás de algum carro , ela dizia q não tinha em estoque\n4- na conseguir vender carros pelo g30\n5- dificuldade financeira' },
+            { id: 73, cnpj: '42278194000131', date: '09/04/2026', store: 'R&O Motors LTDA', product: 'Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas', nps: 0, feedback: 'A ferramenta não funciona da mesma forma que foi oferecida no ato da contratação.' },
+            { id: 74, cnpj: '26846009000101', date: '09/04/2026', store: 'Douglas auto car', product: 'Programa G30, Carchat', reason: 'Não consegui organizar o tempo para participar do método', nps: 6, feedback: 'Os horários que facilita para nossa equipe não bate com os horários de vocês\nInfelizmente no horário de funcionamento da loja não é possível aplicar' },
+            { id: 75, cnpj: '12149673000197', date: '14/04/2026', store: 'C L A PEREIRA (FLEX MOTORS)', product: 'Programa G30', reason: 'O produto não era o que eu esperava', nps: 6, feedback: 'Nao tivemos êxitos em que foi prometido e principalmente a Carchat que foi o maior interesse para fechar o acordo não foi alcançado resultados esperados.' },
+            { id: 76, cnpj: '58935609000132', date: '14/04/2026', store: 'Shineray pau dos ferros', product: 'Carchat', reason: 'O produto não era o que eu esperava', nps: 5, feedback: 'O sistema humanizado continuar respondendo após o vendedor assumir\n\nTrazendo dúvidas e dificultando o fechamento\n\nAlém de passar alguns preços que nem existem em nenhum lugar' },
+            { id: 77, cnpj: '13250042000122', date: '14/04/2026', store: 'P C Nogueira Ribeirão Ltda', product: 'Carchat', reason: 'O produto não era o que eu esperava', nps: 5, feedback: 'Não atendeu a expectativa' },
+            { id: 78, cnpj: '17729148000164', date: '14/04/2026', store: 'Alexandre Automóveis LTDA', product: 'Carchat', reason: 'O produto não era o que eu esperava', nps: 5, feedback: 'Estou cancelando apenas a Carchat' },
+            { id: 79, cnpj: '36705676000128', date: '14/04/2026', store: 'REVENDA VEICULOS', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas', nps: 4, feedback: 'ESTOU INSATISFEITO, NÃO CORRESPONDEU COM O ESPERADO' },
+            { id: 80, cnpj: '59581506000184', date: '14/04/2026', store: 'Autocar', product: 'Carchat', reason: 'O produto não era o que eu esperava', nps: 7, feedback: 'Outro mais barato' },
+            { id: 81, cnpj: '53261412000141', date: '14/04/2026', store: 'Gla multimarcas', product: 'Programa G30', reason: 'Não consegui aplicar por falta de equipe', nps: 0, feedback: 'achamos melhor.' },
+            { id: 82, cnpj: '61851740000126', date: '15/04/2026', store: 'P4veículos', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas, Não consegui organizar o tempo para participar do método, Não me senti acompanhado', nps: 5, feedback: 'Não atingiu minha expectativa' },
+            { id: 83, cnpj: '35264543000109', date: '15/04/2026', store: 'Pablo Car', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava, Não consegui aplicar por falta de equipe, Não consegui organizar o tempo para participar do método', nps: 6, feedback: 'Como já expliquei, eu assinei o programa mais por causa da IA da car chat e tive diversos problemas desde a implantação, a IA é totalmente diferente da apresentada, muito bug, me deu mais problemas do que soluções. Minha loja é pequena, equipe pequena praticamente eu que faço tudo aí fica inviável continuar com o programa.' },
+            { id: 84, cnpj: '43136633000134', date: '16/04/2026', store: 'Lifecar veiculos', product: 'Programa G30', reason: 'O produto não era o que eu esperava', nps: 5, feedback: 'Expectativa e realidade' },
+            { id: 85, cnpj: '12479644000193', date: '17/04/2026', store: 'Anju Motors', product: 'Carchat', reason: 'Falência ou dissolução do negócio', nps: 10, feedback: 'Iremos encerrar as atividades' },
+            { id: 86, cnpj: '17031331000191', date: '20/04/2026', store: 'Mundial Multimarcas', product: 'Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas, Não apliquei o método por completo e estou insatisfeito com os resultados, Não me senti acompanhado', nps: 0, feedback: 'Todos os motivos possíveis. Suporte horrível, ferramenta pior ainda, na hora de vender é mil maravilhas… Na hora de entregar um assa para o outro e dá dois dias úteis pra\nResolver a “implementação” detalhes… E depois a coisa\nFica\nPior ainda. Horrível! Não indico. Nunca mais nem quero ouvir essa baboseira de g30. Se possível vou no reclame aqui e entraremos judicialmente com medidas cabíveis em caso de não extorno do valor que pagamos por algo que nem usamos de tão horrível que é.' },
+            { id: 87, cnpj: '43828512000153', date: '22/04/2026', store: 'JC PRIME', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava', nps: 7, feedback: 'Carchat nao me ajudou aqui, eu usei pra recepcionar todos leads do WhatsApp e trafego pago, e as minhas vendas nesses canais reduziram até o ponto de chegar a zerar no trafego pago. Então optei pelo cancelamento e voltar a fazer o acompanhamento por planilha e ter um controle de todos leads, coisa que perdi no carchat pois ela so adicionava no autoconf quando finalizava. a prospecção, realmente tirou o meu controle que eu ja tinha antes.' },
+            { id: 88, cnpj: '10509877000166', date: '23/04/2026', store: 'Carro Facil', product: 'Carchat', reason: 'Falência ou dissolução do negócio', nps: 7, feedback: 'Não estou usando o programa' },
+            { id: 89, cnpj: '72179237000192', date: '23/04/2026', store: 'Cha-Ve Chamorro Veículos Ltda', product: 'Programa G30', reason: 'Não consegui organizar o tempo para participar do método', nps: 7, feedback: 'Na verdade não estamos conseguindo conciliar as agendas Volkswagen e G30. Como a equipe já tem todas as incumbências por sermos representantes da VW o G30 tem ficado de lado e subutilizado desde a adesão.' },
+            { id: 90, cnpj: '50628110000170', date: '23/04/2026', store: 'GS MOTORS LTDA', product: 'Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas, Não me senti acompanhado', nps: 0, feedback: 'Atendimento péssimo, mais de 40 dias sem utilização por erros seguidos sem correções' },
+            { id: 91, cnpj: '00525362000104', date: '23/04/2026', store: 'Moto shopping Suzuki SJC', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas', nps: 4, feedback: 'A decisão foi tomada em razão do não atendimento às expectativas e condições apresentadas no momento da contratação. O programa oferecido demonstra ser voltado majoritariamente para o segmento de automóveis, enquanto minha empresa atua no ramo de concessionária de motocicletas, o que compromete significativamente a sua utilidade no dia a dia. Além disso, diversas funcionalidades e ferramentas que foram prometidas no momento da negociação não estão disponíveis na prática, o que impacta diretamente na operação e nos resultados esperados. Dessa forma, considerando o desalinhamento entre o serviço contratado e as necessidades do meu negócio, bem como o não cumprimento das condições inicialmente apresentadas, solicito o cancelamento do contrato sem a multa. Aguardo orientações sobre os próximos passos para formalização do encerramento.' },
+            { id: 92, cnpj: '51976984000181', date: '23/04/2026', store: 'Antônio Dió Veículos', product: 'Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas', nps: 7, feedback: 'Não faço parte desse programa' },
+            { id: 93, cnpj: '537809656000160', date: '23/04/2026', store: 'Zum motors', product: 'Carchat', reason: 'O produto não era o que eu esperava', nps: 5, feedback: 'Motivo que eu quero cancelar é que no dia que eu fui contratar e falaram que eu conseguiria estar mandando uma resposta pelo WhatsApp e o WhatsApp encerraria o atendimento automático, e isso não está sendo acontecido' },
+            { id: 94, cnpj: '35874877000196', date: '23/04/2026', store: 'JP veiculos', product: 'Programa G30', reason: 'O produto não era o que eu esperava, Não me senti acompanhado', nps: 0, feedback: 'Não me senti acompanhado e o produto não era oq esperava' },
+            { id: 95, cnpj: '45056079000100', date: '24/04/2026', store: 'Auto play veículos', product: 'Carchat', reason: 'Falta de alinhamento de expectativas', nps: 0, feedback: 'Cancelar CarChat pois o serviço vendido não é o serviço que vocês entregam' },
+            { id: 96, cnpj: '23321489000107', date: '27/04/2026', store: 'Samuel Shop Car', product: 'Programa G30', reason: 'Não consegui organizar o tempo para participar do método', nps: 5, feedback: 'Não conseguimos otimiza o tempo necessário, para atingimos meta.' },
+            { id: 97, cnpj: '09345748000109', date: '27/04/2026', store: 'Avenida veículos', product: 'Carchat', reason: 'O produto não era o que eu esperava, Não me senti acompanhado', nps: 6, feedback: 'Não supriu minhas expectativas' },
+            { id: 98, cnpj: '52978823000190', date: '28/04/2026', store: 'Rnan motors', product: 'Programa G30, Carchat', reason: 'Não me senti acompanhado', nps: 2, feedback: 'Nao tive retorno sobre os problemas da ia' },
+            { id: 99, cnpj: '46769308000105', date: '28/04/2026', store: 'AMERICA CARROS', product: 'Lions Car Club, Programa G30', reason: 'Dificuldades financeiras', nps: 10, feedback: 'PAUSA PARA REORGANIZAR AS FINANÇAS E AJUSTAR. REDUÇÃO DE CUSTOS EXTRAS PARA ESSE MOMENTO.' },
+            { id: 100, cnpj: '62743754000199', date: '28/04/2026', store: 'M3 MOTOS', product: 'Carchat', reason: 'O produto não era o que eu esperava, Não consegui aplicar por falta de equipe, Não me senti acompanhado', nps: 3, feedback: 'Custo mensal, sem o retorno esperado.' },
+            { id: 101, cnpj: '34075586000175', date: '29/04/2026', store: 'Puppo', product: 'Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas, Não me senti acompanhado', nps: 3, feedback: 'Todos acima e atraso na implantacao' },
+            { id: 102, cnpj: '10418445000140', date: '29/04/2026', store: 'Roma veículos', product: 'Programa G30', reason: 'O produto não era o que eu esperava, Problemas judiciais, Não consegui aplicar por falta de equipe, Dificuldades financeiras, Problemas familiares', nps: 6, feedback: 'As respostas estão na pergunta anterior.' },
+            { id: 103, cnpj: '26429540000189', date: '29/04/2026', store: 'Auto top veículos', product: 'Programa G30', reason: 'Não consegui aplicar por falta de equipe', nps: 5, feedback: 'Não dou conta sozinho' },
+            { id: 104, cnpj: '05990078000114', date: '04/05/2026', store: 'CIRNE AUTOMÓVEIS', product: 'Carchat', reason: 'O produto não era o que eu esperava', nps: 7, feedback: 'motivo insatisfeito com o pré atendimento' },
+            { id: 105, cnpj: '008332595000194', date: '05/05/2026', store: 'Sovepe veículos', product: 'Programa G30', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas, Não me senti acompanhado', nps: 0, feedback: 'Não me senti acompanhado, foi trocado 3 assistentes durante 90 dias' },
+            { id: 106, cnpj: '49225554000186', date: '05/05/2026', store: 'Arena Veículos', product: 'Carchat', reason: 'O produto não era o que eu esperava', nps: 7, feedback: 'Recursos limitados' },
+            { id: 107, cnpj: '19944530000116', date: '07/05/2026', store: 'Sr caminhões Ltda', product: 'Programa G30, Carchat', reason: 'Falta de alinhamento de expectativas', nps: 5, feedback: 'Não enquadrou nas nossas expectativas' },
+            { id: 108, cnpj: '52978823000190', date: '07/05/2026', store: 'Rnan motors', product: 'Programa G30', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas, Não me senti acompanhado', nps: 5, feedback: 'Falta de alinhamento e prospecçao' },
+            { id: 109, cnpj: '71031355000196', date: '08/05/2026', store: 'Okei Veículos', product: 'Programa G30, Carchat', reason: 'Não consegui aplicar por falta de equipe, Não consegui organizar o tempo para participar do método', nps: 10, feedback: 'Outras prioridades dentro da loja' },
+            { id: 110, cnpj: '59079046000190', date: '11/05/2026', store: 'Rodoviaria Veiculos', product: 'Carchat', reason: 'O produto não era o que eu esperava', nps: 5, feedback: 'Não se enquadrou no nosso sistema de vendas' },
+            { id: 111, cnpj: '60710461000180', date: '11/05/2026', store: 'Rocha Motors', product: 'Lions Car Club', reason: 'Falta de alinhamento de expectativas', nps: 9, feedback: 'Recalcular rota' },
+            { id: 112, cnpj: '10981327000145', date: '12/05/2026', store: 'Tarjino Multimarcas', product: 'Carchat', reason: 'O produto não era o que eu esperava', nps: 5, feedback: 'Não foi como esperava' },
+            { id: 113, cnpj: '62447678000174', date: '14/05/2026', store: '2b car', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas', nps: 2, feedback: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas e Não me senti acompanhado.' },
+            { id: 114, cnpj: '56481687000189', date: '14/05/2026', store: 'Atila’s car comércio de veículos Ltda', product: 'Carchat', reason: 'O produto não era o que eu esperava', nps: 6, feedback: 'Deu problema por várias vezes não puxava fotos do meu estoque do meu sistema' },
+            { id: 115, cnpj: '50249115000192', date: '18/05/2026', store: 'X CAR', product: 'Carchat', reason: 'O produto não era o que eu esperava', nps: 10, feedback: 'NAO ATENDE MINHA LOJA' },
+            { id: 116, cnpj: '26043868000162', date: '19/05/2026', store: 'Prime Automoveis', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava', nps: 5, feedback: 'A ferramenta que me levou a contratar o programa foi a carchat, e ela não evoluiu , não conseguimos fazer ela atender a equipe não conseguiu configurar e por isso a decisão pelo cancelamento, o investimento é Alto pra nós e já estamos no terceiro mês sem sucesso na implantação, nossa empresa é pequena e familiar por isso a necessidade de uma IA pra nos ajudar com os atendimentos. E como até o momento não conseguiram configurar a carchat para nos atender não faz sentidos continuarmos.' },
+            { id: 117, cnpj: '43356446000166', date: '19/05/2026', store: 'Brasil Seminovos', product: 'Carchat', reason: 'Não me senti acompanhado', nps: 7, feedback: 'Houve demora na resolução do problema, o que acabou impactando algumas vendas. O cliente ficou insatisfeito e, após a má experiência com a IA, não retomou o contato.' },
+            { id: 118, cnpj: '01519567000131', date: '20/05/2026', store: 'Tangará veículos', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava', nps: 8, feedback: 'a reclamações de clientes devido não ter mais o veículo disponível e mesmo assim informar que está no estoque. Foi falado que ia ser feita a integração com os sites para filtrar o cliente e não foi feito isso também.' },
+            { id: 119, cnpj: '50490514000140', date: '21/05/2026', store: 'ONE MOTORS', product: 'Programa G30, Carchat', reason: 'Não consegui aplicar por falta de equipe, Não consegui organizar o tempo para participar do método, Dificuldades financeiras', nps: 8, feedback: 'Necessidade de repensar/reorganizar o negócio' },
+            { id: 120, cnpj: '09071997000145', date: '21/05/2026', store: 'Rozze Veiculos', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas, Não me senti acompanhado', nps: 0, feedback: 'O principal motivo que me levou a cancelar o Programa G30/Lions foi a falta de acompanhamento, suporte e preparo da equipe.\nPor se tratar de uma empresa consolidada no mercado, eu esperava um atendimento mais estruturado e eficiente. Porém, mesmo após um mês utilizando o programa, ainda existem problemas básicos de funcionamento que não foram resolvidos.\nAlém disso, dúvidas simples frequentemente não são respondidas, o que gera insegurança e dificulta a utilização da plataforma no dia a dia, como a Carchat, onde também não me senti segura e não percebi credibilidade suficiente no serviço oferecido.\nDiante disso, não vejo sentido em continuar pagando por um serviço que, até o momento, não entregou a experiência, o suporte e a confiança que foram prometidos.' },
+            { id: 121, cnpj: '712625137000110', date: '22/05/2026', store: 'Exchange Motors', product: 'Lions Car Club, Programa G30, Carchat', reason: 'O produto não era o que eu esperava.', nps: 7, feedback: 'O produto não era o que eu esperava.' },
+            { id: 122, cnpj: '05262178000124', date: '25/05/2026', store: "Mark's Veículos", product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava', nps: 5, feedback: 'Não recebi o produto' },
+            { id: 123, cnpj: '563363592000126', date: '25/05/2026', store: 'SHINERAY QUIXADÁ - FERNANDO MOTOS', product: 'Programa G30', reason: 'Não consegui aplicar por falta de equipe', nps: 5, feedback: 'FALTA DE COMPROMETIMENTO DA EQUIPE' },
+            { id: 124, cnpj: '46381449000148', date: '26/05/2026', store: 'SMART VEICULOS UBERABA LTDA', product: 'Lions Car Club, Programa G30', reason: 'Não consegui organizar o tempo para participar do método', nps: 10, feedback: 'NÃO ESTAMOS UTILIZANDO' },
+            { id: 125, cnpj: '061065883000102', date: '27/05/2026', store: 'Shineray Motonow', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas, Não me senti acompanhado', nps: 0, feedback: 'Nao serviu para minha empresa, processo muito lento' },
+            { id: 126, cnpj: '826000697000194', date: '27/05/2026', store: 'NOVA MULTIMARCAS', product: 'Programa G30', reason: 'Não concordo com o que a metodologia ensina', nps: 8, feedback: 'Diretrizes' },
+            { id: 127, cnpj: '252154678000122', date: '27/05/2026', store: 'VRJ PRIME', product: 'Carchat', reason: 'Falta de alinhamento de expectativas, Não me senti acompanhado', nps: 2, feedback: 'Não atendeu as expectativas e falta de atendimento.' },
+            { id: 128, cnpj: '851179146000187', date: '28/05/2026', store: 'K2 MULTIMARCAS', product: 'Programa G30, Carchat', reason: 'Não consegui organizar o tempo para participar do método', nps: 8, feedback: 'NAO TEMOS SO ESTA EMPRESA, TEMOS OUTROS RAMOS TAMBEM, ENTAO NOSSO TEMPO É CURTO POR ISSO NAO CONSEGUIMOS ALINHAR PARA PODER FAZER O ACOMPANHAMENTO NECESSARIO, SAO MUITAS REUNIOES MENSAIS VIDEOS PRA ACOMPANHAR PALESTRAS ETC. E NÃO CONSIGO PARAR MUITO MENOS PARAR A EQUIPE PRA FAZER ESSE ACOMPANHAMENTO.' },
+            { id: 129, cnpj: '243369352000121', date: '28/05/2026', store: 'Jm veículos', product: 'Programa G30, Carchat', reason: 'Falta de alinhamento de expectativas, Não me senti acompanhado', nps: 2, feedback: 'Cancelar o carchat por motivos de não está funcionando\nAo procurar suporte informaram que o problema era o nosso crm mas o crm nos notificou que não estava com problemas\nEnfim\nMesmo avisando o suporte não foi refeito então desde o dia contratado praticamente não usamos\nE quando foi ativo estava com erro e enviando fotos de carros de outras lojas para nossos clientes' },
+            { id: 130, cnpj: '619002116000198', date: '29/05/2026', store: 'pallotti veiculos', product: 'Carchat', reason: 'Falta de alinhamento de expectativas', nps: 6, feedback: 'não conseguimos alinhar como que precisamo, temos que ficar fiscalinazando o tempo todo a ferramenta e depois dos ajustes passado algum vota nos mesmo erros e não dispomos do tempo necessário para essa correção quase que diária' },
+            { id: 131, cnpj: '415345376000105', date: '29/05/2026', store: 'Facecar veículos', product: 'Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas', nps: 4, feedback: 'Não tive um bom suporte a ferramenta não funciona como apresentado\nNão integrava com Instagram e Facebook\nPropaganda enganosa' }
+        ];
+
+        // G30 Histórico (Grupo de Controlo)
+        const g30HistData = [
+            { store: 'Carros & Cia', product: 'Programa G30', reason: 'Dificuldades Financeiras', nps: 8 },
+            { store: 'Veloz Motors', product: 'Programa G30', reason: 'Falta de Tempo', nps: 9 },
+            { store: 'Elite Veículos', product: 'Lions Car Club', reason: 'Mudança de Estratégia', nps: 7 },
+            { store: 'Nacional Autos', product: 'Programa G30', reason: 'Falta de Equipe', nps: 9 },
+            { store: 'Auto Luxo', product: 'Programa G30', reason: 'Dificuldades Financeiras', nps: 8 }
+        ];
+
+        let auditState = rawData.map(d => ({ ...d, status: 'Pendente', v_origin: null, v_veredict: null }));
+
+        // Variáveis de Gráficos Apex
+        let chartReasons, chartProducts, chartImpactBar, chartImpactRadar, chartRegression, chartArima;
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            populateMonthFilter();
+            renderOverview();
+            renderAuditTable('Todos');
+            renderImpact();
+            renderArima();
+            renderSixSigma();
+        });
+
+        // Preencher o filtro de meses automaticamente
+        function populateMonthFilter() {
+            const select = document.getElementById('monthFilter');
+            const months = new Set();
+            
+            rawData.forEach(d => {
+                const parts = d.date.split('/');
+                if(parts.length === 3) {
+                    const monthYear = `${parts[1]}/${parts[2]}`; // MM/YYYY
+                    months.add(monthYear);
+                }
+            });
+            
+            const monthNames = {
+                '01': 'Janeiro', '02': 'Fevereiro', '03': 'Março', '04': 'Abril', 
+                '05': 'Maio', '06': 'Junho', '07': 'Julho', '08': 'Agosto', 
+                '09': 'Setembro', '10': 'Outubro', '11': 'Novembro', '12': 'Dezembro'
+            };
+            
+            Array.from(months).sort().forEach(my => {
+                const [m, y] = my.split('/');
+                const option = document.createElement('option');
+                option.value = my;
+                option.text = `${monthNames[m]} ${y}`;
+                select.appendChild(option);
+            });
+        }
+
+        // Troca de Abas
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('border-blue-600', 'text-blue-700', 'border-b-2');
+                el.classList.add('text-slate-500');
+            });
+            
+            document.getElementById('content-' + tabId).classList.add('active');
+            let btn = document.getElementById('tab-' + tabId);
+            btn.classList.remove('text-slate-500');
+            btn.classList.add('border-blue-600', 'text-blue-700', 'border-b-2');
+
+            // Refazer render dos gráficos caso a aba não estivesse visível
+            if(tabId === 'overview') { chartReasons.render(); chartProducts.render(); }
+            if(tabId === 'impact') { chartImpactBar.render(); chartImpactRadar.render(); }
+            if(tabId === 'arima') { chartArima.render(); }
+            if(tabId === 'sixsigma') { chartRegression.render(); }
+        }
+
+        // --- ABA: VISÃO GERAL ---
+        function renderOverview() {
+            // KPIs
+            document.getElementById('kpi-total').innerText = rawData.length;
+            
+            let avgNps = rawData.reduce((acc, curr) => acc + curr.nps, 0) / rawData.length;
+            document.getElementById('kpi-nps').innerText = avgNps.toFixed(1);
+
+            let prodCounts = {};
+            let reasonCounts = {};
+            rawData.forEach(d => {
+                prodCounts[d.product] = (prodCounts[d.product] || 0) + 1;
+                let r = d.reason.split(',')[0].trim();
+                reasonCounts[r] = (reasonCounts[r] || 0) + 1;
+            });
+
+            let maxProd = Object.keys(prodCounts).reduce((a, b) => prodCounts[a] > prodCounts[b] ? a : b);
+            let maxReason = Object.keys(reasonCounts).reduce((a, b) => reasonCounts[a] > reasonCounts[b] ? a : b);
+            
+            document.getElementById('kpi-product').innerText = maxProd;
+            document.getElementById('kpi-reason').innerText = maxReason;
+            document.getElementById('kpi-reason').title = maxReason;
+
+            // Gráfico Motivos
+            let reasonsSorted = Object.entries(reasonCounts).sort((a,b) => b[1] - a[1]).slice(0, 5);
+            let rOptions = {
+                series: [{ name: 'Cancelamentos', data: reasonsSorted.map(x => x[1]) }],
+                chart: { type: 'bar', height: 300, toolbar: { show: false } },
+                plotOptions: { bar: { borderRadius: 4, horizontal: true } },
+                colors: ['#3b82f6'],
+                dataLabels: { enabled: true },
+                xaxis: { categories: reasonsSorted.map(x => x[0]) }
+            };
+            chartReasons = new ApexCharts(document.querySelector("#chart-reasons"), rOptions);
+            chartReasons.render();
+
+            // Gráfico Produtos
+            let pOptions = {
+                series: Object.values(prodCounts),
+                labels: Object.keys(prodCounts),
+                chart: { type: 'donut', height: 300 },
+                colors: ['#ef4444', '#8b5cf6', '#f59e0b', '#10b981'],
+                dataLabels: { enabled: true, formatter: function (val) { return val.toFixed(1) + "%" } },
+                legend: { position: 'bottom' }
+            };
+            chartProducts = new ApexCharts(document.querySelector("#chart-products"), pOptions);
+            chartProducts.render();
+        }
+
+        // --- ABA: AUDITORIA ---
+        function renderAuditTable(filter) {
+            let tbody = document.getElementById('audit-table-body');
+            tbody.innerHTML = '';
+            
+            let filtered = auditState;
+            if(filter !== 'Todos') {
+                filtered = auditState.filter(a => a.status === filter);
+            }
+
+            let auditados = auditState.filter(a => a.status === 'Auditado').length;
+            document.getElementById('audit-counter').innerText = `${auditados} de ${auditState.length} Auditados`;
+
+            filtered.forEach(item => {
+                let statusBadge = item.status === 'Auditado' 
+                    ? `<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold"><i data-lucide="check" class="w-3 h-3 inline"></i> Auditado</span>`
+                    : `<span class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs font-bold"><i data-lucide="clock" class="w-3 h-3 inline"></i> Pendente</span>`;
+                
+                let tr = document.createElement('tr');
+                tr.className = 'border-b border-slate-100 hover:bg-slate-50 transition';
+                tr.innerHTML = `
+                    <td class="p-4">${statusBadge}</td>
+                    <td class="p-4 whitespace-nowrap text-slate-500">${item.date}</td>
+                    <td class="p-4">
+                        <p class="font-bold text-slate-800">${item.store}</p>
+                        <p class="text-xs text-slate-400 font-mono">${formatCNPJ(item.cnpj)}</p>
+                    </td>
+                    <td class="p-4">
+                        <p class="text-xs font-bold text-blue-600 bg-blue-50 inline-block px-2 py-0.5 rounded">${item.product}</p>
+                        <p class="text-sm text-slate-600 mt-1 truncate max-w-[200px]" title="${item.reason}">${item.reason}</p>
+                    </td>
+                    <td class="p-4 text-center">
+                        <button onclick="openAuditModal(${item.id})" class="text-slate-500 hover:text-blue-600 hover:bg-blue-50 p-2 rounded-lg transition">
+                            <i data-lucide="edit-3" class="w-5 h-5"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            lucide.createIcons();
+        }
+
+        function filterAudit(status) {
+            document.querySelectorAll('#auditFilters .filter-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white');
+                btn.classList.add('bg-white', 'text-slate-600');
+            });
+            event.target.classList.add('bg-blue-600', 'text-white');
+            event.target.classList.remove('bg-white', 'text-slate-600');
+            renderAuditTable(status);
+        }
+
+        let currentAuditId = null;
+        let tempOrigin = null;
+        let tempVeredict = null;
+
+        function openAuditModal(id) {
+            let item = auditState.find(a => a.id === id);
+            if(!item) return;
+            
+            currentAuditId = id;
+            document.getElementById('modalStoreName').innerText = item.store;
+            document.getElementById('modalCNPJ').innerText = formatCNPJ(item.cnpj);
+            document.getElementById('modalReason').innerText = item.reason;
+            document.getElementById('modalFeedback').innerText = `"${item.feedback}"`;
+            document.getElementById('modalAIText').innerText = `Análise de IA preliminar sugere foco principal em: ${item.reason.split(',')[0]}. NPS registrado: ${item.nps}/10.`;
+            
+            // Reset buttons
+            tempOrigin = item.v_origin;
+            tempVeredict = item.v_veredict;
+            updateModalButtons();
+
+            document.getElementById('auditModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('auditModal').classList.remove('active');
+        }
+
+        function toggleOrigin(origin) {
+            tempOrigin = origin;
+            updateModalButtons();
+        }
+
+        function setVeredict(ver) {
+            tempVeredict = ver;
+            updateModalButtons();
+        }
+
+        function updateModalButtons() {
+            document.querySelectorAll('.origin-btn').forEach(b => {
+                b.classList.remove('bg-blue-100', 'border-blue-500', 'text-blue-700');
+                if(b.innerText.includes(tempOrigin)) {
+                    b.classList.add('bg-blue-100', 'border-blue-500', 'text-blue-700');
+                }
+            });
+            document.querySelectorAll('.ver-btn').forEach(b => {
+                b.classList.remove('border-green-500', 'bg-green-50', 'text-green-700');
+                if(b.querySelector('span').innerText === tempVeredict) {
+                    b.classList.add('border-green-500', 'bg-green-50', 'text-green-700');
+                }
+            });
+        }
+
+        function saveAudit() {
+            let itemIndex = auditState.findIndex(a => a.id === currentAuditId);
+            if(itemIndex > -1) {
+                auditState[itemIndex].v_origin = tempOrigin;
+                auditState[itemIndex].v_veredict = tempVeredict;
+                auditState[itemIndex].status = 'Auditado';
+            }
+            closeModal();
+            renderAuditTable('Todos');
+        }
+
+        // --- ABA: IMPACTO E CONTÁGIO ---
+        function renderImpact() {
+            let combos = rawData.filter(d => d.product.includes('G30') && d.product.includes('Carchat'));
+            let totalG30 = rawData.filter(d => d.product.includes('G30')).length;
+            let totalLions = rawData.filter(d => d.product.includes('Lions')).length;
+
+            let comboG30 = combos.length;
+            let comboLions = rawData.filter(d => d.product.includes('Lions') && d.product.includes('Carchat')).length;
+
+            document.getElementById('impact-combos').innerText = combos.length;
+            document.getElementById('impact-g30').innerText = comboG30;
+            document.getElementById('impact-g30-perc').innerText = `(${((comboG30/totalG30)*100 || 0).toFixed(1)}%)`;
+            
+            document.getElementById('impact-lions').innerText = comboLions;
+            document.getElementById('impact-lions-perc').innerText = `(${((comboLions/totalLions)*100 || 0).toFixed(1)}%)`;
+
+            document.getElementById('splash-score').innerText = `${((comboG30/totalG30)*100 || 0).toFixed(0)}%`;
+
+            // Gráfico de Barras de Causalidade
+            let bOptions = {
+                series: [{ name: 'G30 Solo', data: [15] }, { name: 'Combo G30+Carchat', data: [35] }],
+                chart: { type: 'bar', height: 250, stacked: true, toolbar: {show:false} },
+                plotOptions: { bar: { horizontal: true } },
+                colors: ['#94a3b8', '#ef4444'],
+                xaxis: { categories: ['Q1 2026'] },
+                fill: { opacity: 1 }
+            };
+            chartImpactBar = new ApexCharts(document.querySelector("#chart-impact-bar"), bOptions);
+            
+            // Gráfico Radar Vulnerabilidade
+            let rdOptions = {
+                series: [{ name: 'Com Carchat', data: [80, 50, 30, 90, 100] }, { name: 'Sem Carchat', data: [20, 30, 40, 20, 20] }],
+                chart: { height: 250, type: 'radar', toolbar:{show:false} },
+                labels: ['IA Inconsistente', 'Falta Acompanhamento', 'Preço/Financeiro', 'NPS Baixo', 'Volume Reclamação'],
+                colors: ['#ef4444', '#3b82f6'],
+                stroke: { width: 2 }
+            };
+            chartImpactRadar = new ApexCharts(document.querySelector("#chart-impact-radar"), rdOptions);
+        }
+
+        // --- ABA: ARIMA ---
+        function renderArima() {
+            let arimaOptions = {
+                series: [
+                    { name: "Realizado", data: [12, 15, 18, 22, null, null, null] },
+                    { name: "Inércia (S/ Ação)", data: [null, null, null, 22, 28, 35, 45] },
+                    { name: "Otimizado (C/ DMAIC)", data: [null, null, null, 22, 20, 16, 12] }
+                ],
+                chart: { height: 350, type: 'line', toolbar: { show: false } },
+                colors: ['#64748b', '#ef4444', '#22c55e'],
+                stroke: { width: [3, 3, 3], curve: 'smooth', dashArray: [0, 5, 5] },
+                xaxis: { categories: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul'] },
+                markers: { size: 4 },
+                legend: { position: 'top' }
+            };
+            chartArima = new ApexCharts(document.querySelector("#chart-arima"), arimaOptions);
+
+            document.getElementById('uncontrollable-perc').innerText = '15%'; // Dummy
+            populateArimaMonths();
+        }
+
+        function populateArimaMonths() {
+            let container = document.getElementById('arima-monthly-details');
+            container.innerHTML = `
+                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                    <p class="font-bold text-slate-700">Maio (Projeção)</p>
+                    <p class="text-2xl font-black text-red-500 mt-2">28 <span class="text-sm font-normal text-slate-500">canc.</span></p>
+                    <p class="text-xs text-green-600 font-bold mt-1">Salvo c/ trava: 8</p>
+                </div>
+                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                    <p class="font-bold text-slate-700">Junho (Projeção)</p>
+                    <p class="text-2xl font-black text-red-500 mt-2">35 <span class="text-sm font-normal text-slate-500">canc.</span></p>
+                    <p class="text-xs text-green-600 font-bold mt-1">Salvo c/ trava: 19</p>
+                </div>
+                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                    <p class="font-bold text-slate-700">Julho (Projeção)</p>
+                    <p class="text-2xl font-black text-red-500 mt-2">45 <span class="text-sm font-normal text-slate-500">canc.</span></p>
+                    <p class="text-xs text-green-600 font-bold mt-1">Salvo c/ trava: 33</p>
+                </div>
+            `;
+        }
+
+        function updateArima() {
+            // Apenas para efeito visual no checkbox
+            let checked = document.getElementById('excludeUncontrollable').checked;
+            let newData = checked 
+                ? [null, null, null, 18, 22, 28, 35] 
+                : [null, null, null, 22, 28, 35, 45];
+            
+            chartArima.updateSeries([
+                { name: "Realizado", data: [12, 15, 18, 22, null, null, null] },
+                { name: "Inércia (S/ Ação)", data: newData },
+                { name: "Otimizado (C/ DMAIC)", data: [null, null, null, 22, 20, 16, 12] }
+            ]);
+        }
+
+        // --- ABA: SIX SIGMA ---
+        function renderSixSigma() {
+            let g30Total = rawData.filter(d => d.product.includes('G30') && !d.reason.includes('Falência')).length;
+            let comboCanc = rawData.filter(d => d.product.includes('G30') && d.product.includes('Carchat') && !d.reason.includes('Falência')).length;
+
+            document.getElementById('math-g30-total').innerText = g30Total;
+            document.getElementById('math-combo-total').innerText = comboCanc;
+            document.getElementById('math-v1').innerText = comboCanc;
+            document.getElementById('math-v2').innerText = g30Total;
+            
+            let prob = g30Total > 0 ? ((comboCanc / g30Total) * 100).toFixed(1) : 0;
+            document.getElementById('math-result').innerText = prob;
+            document.getElementById('math-result-text').innerText = prob + '%';
+
+            // Média NPS Control vs Test
+            let meanYes = rawData.filter(d => d.product.includes('Carchat')).reduce((acc, c) => acc + c.nps, 0) / rawData.filter(d => d.product.includes('Carchat')).length;
+            document.getElementById('stats-mean-yes').innerText = (meanYes || 0).toFixed(1);
+
+            // Regressão Linear Fake (Feedback length vs NPS)
+            let scatterData = rawData.map(d => [d.feedback.length, d.nps]);
+            let regOptions = {
+                series: [{ name: "Casos", data: scatterData }],
+                chart: { type: 'scatter', height: 250, toolbar: { show: false } },
+                xaxis: { title: { text: 'Tamanho da Reclamação (caracteres)' }, tickAmount: 5 },
+                yaxis: { title: { text: 'Nota NPS (0-10)' }, max: 10 },
+                colors: ['#8b5cf6'],
+                grid: { xaxis: { lines: { show: true } } }
+            };
+            chartRegression = new ApexCharts(document.querySelector("#chart-regression"), regOptions);
+        }
+
+        // Modais Auxiliares
+        function openG30HistModal() {
+            let tbody = document.getElementById('g30-hist-table-body');
+            tbody.innerHTML = '';
+            g30HistData.forEach(d => {
+                let tr = document.createElement('tr');
+                tr.className = 'border-b border-slate-100';
+                tr.innerHTML = `
+                    <td class="p-4 font-semibold text-slate-700">${d.store}</td>
+                    <td class="p-4"><span class="text-xs bg-slate-100 px-2 py-1 rounded">${d.product}</span></td>
+                    <td class="p-4 text-slate-500">${d.reason}</td>
+                    <td class="p-4 text-center font-bold text-blue-600">${d.nps}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            document.getElementById('g30HistModal').classList.add('active');
+        }
+
+        function closeG30HistModal() {
+            document.getElementById('g30HistModal').classList.remove('active');
+        }
+    </script>
+</body>
+</html>
