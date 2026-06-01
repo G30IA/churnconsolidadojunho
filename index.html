@@ -22,23 +22,24 @@
         
         /* Math typesetting styling */
         .math-block { font-family: 'Courier New', Courier, monospace; background: #f8fafc; padding: 10px; border-left: 4px solid #3b82f6; border-radius: 4px; }
+        .stat-value { font-family: 'Courier New', Courier, monospace; letter-spacing: -0.05em; }
     </style>
 </head>
-<body class="bg-orange-50 min-h-screen font-sans text-slate-800 p-4 md:p-8">
+<body class="bg-slate-50 min-h-screen font-sans text-slate-800 p-4 md:p-8">
 
     <div class="max-w-7xl mx-auto">
         <!-- HEADER -->
         <header class="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
                 <h1 class="text-3xl font-bold text-slate-900 flex items-center gap-2">
-                    <i data-lucide="trending-down" class="text-red-500 w-8 h-8"></i>
+                    <i data-lucide="trending-down" class="text-red-600 w-8 h-8"></i>
                     Central de Inteligência de Churn
                 </h1>
-                <p class="text-slate-500 mt-1">Análise geral, auditoria de casos, previsão ARIMA e estatística Six Sigma.</p>
+                <p class="text-slate-500 mt-1">Análise geral, auditoria de casos, previsão ARIMA e estatística Six Sigma avançada.</p>
             </div>
             <div class="flex flex-col sm:flex-row items-center gap-3">
                 <!-- BOTÃO DE IMPORTAÇÃO CSV -->
-                <label for="csv-upload" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-sm cursor-pointer transition-colors font-semibold text-sm">
+                <label for="csv-upload" class="flex items-center gap-2 bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg shadow-sm cursor-pointer transition-colors font-semibold text-sm">
                     <i data-lucide="upload-cloud" class="w-4 h-4"></i> Importar CSV
                 </label>
                 <input type="file" id="csv-upload" accept=".csv" class="hidden" />
@@ -54,7 +55,7 @@
 
         <!-- NAVEGAÇÃO POR ABAS -->
         <nav class="flex space-x-6 border-b border-slate-200 mb-8 px-2 overflow-x-auto">
-            <button onclick="switchTab('overview')" id="tab-overview" class="tab-btn pb-3 px-1 whitespace-nowrap flex items-center gap-2 transition-colors border-b-2 border-blue-600 text-blue-700 font-semibold">
+            <button onclick="switchTab('overview')" id="tab-overview" class="tab-btn pb-3 px-1 whitespace-nowrap flex items-center gap-2 transition-colors border-b-2 border-red-600 text-red-700 font-semibold">
                 <i data-lucide="activity" class="w-4 h-4"></i> Visão Geral
             </button>
             <button onclick="switchTab('audit')" id="tab-audit" class="tab-btn pb-3 px-1 whitespace-nowrap flex items-center gap-2 transition-colors text-slate-500 hover:text-slate-800">
@@ -67,7 +68,7 @@
                 <i data-lucide="trending-up" class="w-4 h-4"></i> Previsão ARIMA
             </button>
             <button onclick="switchTab('sixsigma')" id="tab-sixsigma" class="tab-btn pb-3 px-1 whitespace-nowrap flex items-center gap-2 transition-colors text-slate-500 hover:text-slate-800">
-                <i data-lucide="microscope" class="w-4 h-4 text-purple-600"></i> Dossiê Six Sigma
+                <i data-lucide="microscope" class="w-4 h-4"></i> Dossiê Six Sigma
             </button>
         </nav>
 
@@ -75,31 +76,31 @@
         <div id="content-overview" class="tab-content active animate-in fade-in duration-300">
             <!-- KPIs -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center gap-4">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
                     <div class="p-3 bg-red-100 text-red-600 rounded-lg"><i data-lucide="users" class="w-6 h-6"></i></div>
                     <div><p class="text-sm text-slate-500 font-medium">Cancelamentos</p><h3 id="kpi-total" class="text-2xl font-bold text-slate-800">0</h3></div>
                 </div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center gap-4">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
                     <div class="p-3 bg-amber-100 text-amber-600 rounded-lg"><i data-lucide="frown" class="w-6 h-6"></i></div>
                     <div><p class="text-sm text-slate-500 font-medium">NPS Médio</p><h3 id="kpi-nps" class="text-2xl font-bold text-slate-800">0.0</h3></div>
                 </div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center gap-4">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
                     <div class="p-3 bg-blue-100 text-blue-600 rounded-lg"><i data-lucide="car" class="w-6 h-6"></i></div>
                     <div><p class="text-sm text-slate-500 font-medium">Produto Vilão</p><h3 id="kpi-product" class="text-lg font-bold text-slate-800 truncate">-</h3></div>
                 </div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center gap-4">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
                     <div class="p-3 bg-slate-100 text-slate-600 rounded-lg"><i data-lucide="alert-circle" class="w-6 h-6"></i></div>
                     <div><p class="text-sm text-slate-500 font-medium">Motivo Principal</p><h3 id="kpi-reason" class="text-sm font-bold text-slate-800 truncate max-w-[150px]" title="">-</h3></div>
                 </div>
             </div>
             <!-- GRÁFICOS -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                    <h3 class="text-lg font-semibold mb-4 text-slate-800">Motivos de Cancelamento</h3>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-lg font-semibold mb-4 text-slate-800">Motivos de Cancelamento (Pareto)</h3>
                     <div id="chart-reasons" class="h-80"></div>
                 </div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                    <h3 class="text-lg font-semibold mb-4 text-slate-800">Cancelamentos por Produto</h3>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-lg font-semibold mb-4 text-slate-800">Distribuição por Produto</h3>
                     <div id="chart-products" class="h-80"></div>
                 </div>
             </div>
@@ -110,15 +111,15 @@
                 <div class="p-4 border-b border-slate-200 bg-slate-50 flex flex-col gap-4">
                     <div class="flex justify-between items-center">
                         <h3 class="font-semibold text-slate-700 flex items-center gap-2">
-                            <i data-lucide="file-text" class="w-5 h-5 text-blue-500"></i> Auditoria de Casos
+                            <i data-lucide="file-text" class="w-5 h-5 text-slate-500"></i> Auditoria de Casos
                         </h3>
-                        <span id="audit-counter" class="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-medium">0 de 0 Auditados</span>
+                        <span id="audit-counter" class="text-sm bg-slate-200 text-slate-700 px-3 py-1 rounded-full font-medium">0 de 0 Auditados</span>
                     </div>
                     <div id="auditFilters" class="flex flex-wrap gap-2 items-center text-sm">
                         <span class="font-semibold text-slate-600">Filtrar por Status:</span>
-                        <button onclick="filterAudit('Todos')" class="filter-btn px-3 py-1 bg-blue-600 text-white rounded-full font-bold">Todos</button>
-                        <button onclick="filterAudit('Pendente')" class="filter-btn px-3 py-1 bg-white border border-slate-300 rounded-full font-bold hover:bg-slate-100 transition">Pendente</button>
-                        <button onclick="filterAudit('Auditado')" class="filter-btn px-3 py-1 bg-white border border-slate-300 rounded-full font-bold hover:bg-slate-100 transition">Auditado</button>
+                        <button onclick="filterAudit('Todos', event)" class="filter-btn px-3 py-1 bg-slate-800 text-white rounded-full font-bold">Todos</button>
+                        <button onclick="filterAudit('Pendente', event)" class="filter-btn px-3 py-1 bg-white border border-slate-300 rounded-full font-bold hover:bg-slate-100 transition">Pendente</button>
+                        <button onclick="filterAudit('Auditado', event)" class="filter-btn px-3 py-1 bg-white border border-slate-300 rounded-full font-bold hover:bg-slate-100 transition">Auditado</button>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
@@ -141,15 +142,15 @@
         </div>
 
         <div id="content-impact" class="tab-content animate-in fade-in duration-300">
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                 <div class="flex items-center justify-between mb-6">
                     <div>
                         <h2 class="text-xl font-bold text-slate-800 mb-2 flex items-center gap-2">
                             <i data-lucide="zap" class="text-yellow-500 fill-yellow-500 w-6 h-6"></i> Engenharia de Contágio (Deep Analysis)
                         </h2>
-                        <p class="text-slate-500 text-sm">Identificando o "Paciente Zero" nos contratos de alto ticket (Amostra saneada).</p>
+                        <p class="text-slate-500 text-sm">Identificando o "Paciente Zero" na matriz de produtos através do Radar de Vulnerabilidades.</p>
                     </div>
-                    <div class="bg-orange-100 px-4 py-2 rounded-lg text-orange-700 text-center shadow-inner border border-orange-200">
+                    <div class="bg-red-50 px-4 py-2 rounded-lg text-red-700 text-center shadow-inner border border-red-200">
                         <p class="text-[10px] font-bold uppercase tracking-tighter">Splash Score P(G30|Carchat)</p>
                         <p id="splash-score" class="text-2xl font-black">0%</p>
                     </div>
@@ -175,45 +176,53 @@
                         </h4>
                         <p class="text-[10px] text-purple-600 mt-1">Dos cancelamentos totais de Lions.</p>
                     </div>
-                    <div class="bg-red-50 p-4 rounded-xl border border-red-100">
-                        <p class="text-xs font-bold text-red-400 uppercase mb-1">Splash Prob.</p>
-                        <h4 class="text-2xl font-bold text-red-700">High Risk</h4>
+                    <div class="bg-orange-50 p-4 rounded-xl border border-orange-200">
+                        <p class="text-xs font-bold text-orange-600 uppercase mb-1">NPS Delta</p>
+                        <h4 id="impact-nps-delta" class="text-2xl font-bold text-orange-700">-</h4>
+                        <p class="text-[10px] text-orange-600 mt-1">Impacto isolado do combo.</p>
                     </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                        <h3 class="text-md font-bold text-slate-700 mb-6">Atribuição de Causalidade (Paciente Zero)</h3>
+                    <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                        <h3 class="text-md font-bold text-slate-700 mb-6 flex justify-between items-center">
+                            Atribuição de Causalidade
+                            <i data-lucide="bar-chart-2" class="w-5 h-5 text-slate-400"></i>
+                        </h3>
                         <div id="chart-impact-bar" class="h-64"></div>
                     </div>
-                    <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                        <h3 class="text-md font-bold text-slate-700 mb-6">Radar de Vulnerabilidade</h3>
+                    <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                        <h3 class="text-md font-bold text-slate-700 mb-6 flex justify-between items-center">
+                            Radar de Vulnerabilidade (Causalidades)
+                            <i data-lucide="radar" class="w-5 h-5 text-slate-400"></i>
+                        </h3>
                         <div id="chart-impact-radar" class="h-64"></div>
+                        <p class="text-[10px] text-center text-slate-500 mt-2">Distribuição % de queixas extraídas via NLP dos feedbacks reais.</p>
                     </div>
                 </div>
             </div>
         </div>
 
         <div id="content-arima" class="tab-content animate-in fade-in duration-300">
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                     <div>
-                        <h2 class="text-xl font-bold text-slate-800 mb-1 flex items-center gap-2"><i data-lucide="cpu" class="text-indigo-500 w-6 h-6"></i> Projeção de Churn (Modelo ARIMA Simulado)</h2>
+                        <h2 class="text-xl font-bold text-slate-800 mb-1 flex items-center gap-2"><i data-lucide="cpu" class="text-slate-600 w-6 h-6"></i> Projeção de Churn (Modelo ARIMA Simulado)</h2>
                         <p class="text-slate-500 text-sm">A <strong>Linha Vermelha</strong> é a inércia atual. A <strong>Verde</strong> estima a redução por retenção e congelamento de cross-sell.</p>
                     </div>
-                    <div class="bg-red-50 border border-red-200 rounded-lg p-3 flex flex-col gap-2 max-w-sm">
-                        <div class="flex justify-between items-center text-red-800">
+                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 flex flex-col gap-2 max-w-sm">
+                        <div class="flex justify-between items-center text-slate-800">
                             <span class="text-xs font-bold uppercase">Churn Incontrolável (Falências)</span>
                             <span id="uncontrollable-perc" class="font-black text-lg">0%</span>
                         </div>
-                        <label class="flex items-center gap-2 mt-1 cursor-pointer bg-white p-1.5 rounded border border-red-100 shadow-sm">
-                            <input type="checkbox" id="excludeUncontrollable" onchange="updateArima()" class="w-4 h-4 text-red-600 rounded border-red-300">
+                        <label class="flex items-center gap-2 mt-1 cursor-pointer bg-white p-1.5 rounded border border-slate-200 shadow-sm">
+                            <input type="checkbox" id="excludeUncontrollable" onchange="updateArima()" class="w-4 h-4 text-slate-600 rounded border-slate-300 focus:ring-slate-500">
                             <span class="text-xs font-semibold text-slate-700">Excluir Incontroláveis da Previsão</span>
                         </label>
                     </div>
                 </div>
                 <div id="chart-arima" class="h-96 w-full mb-8"></div>
                 <div class="border-t border-slate-200 pt-6">
-                    <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2"><i data-lucide="trending-up" class="text-green-500 h-5 w-5"></i> Detalhamento Mensal (Q2 e Q3 Projetado)</h3>
+                    <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2"><i data-lucide="trending-up" class="text-green-600 h-5 w-5"></i> Detalhamento Mensal (Próximo Trimestre)</h3>
                     <div id="arima-monthly-details" class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <!-- Populated by JS -->
                     </div>
@@ -223,109 +232,156 @@
 
         <div id="content-sixsigma" class="tab-content animate-in fade-in duration-300">
             <div class="space-y-6">
-                <div class="bg-gradient-to-r from-slate-800 to-slate-900 text-white p-8 rounded-xl shadow-lg">
-                    <h2 class="text-2xl font-black mb-2 flex items-center gap-3">
-                        <i data-lucide="microscope" class="w-8 h-8 text-purple-400"></i> Avaliação Estatística (Lean Six Sigma)
+                <div class="bg-gradient-to-r from-slate-800 to-slate-900 text-white p-8 rounded-xl shadow-lg relative overflow-hidden">
+                    <div class="absolute right-0 top-0 opacity-10 pointer-events-none">
+                        <i data-lucide="sigma" class="w-64 h-64 -mt-10 -mr-10"></i>
+                    </div>
+                    <h2 class="text-2xl font-black mb-3 flex items-center gap-3 relative z-10">
+                        <i data-lucide="microscope" class="w-8 h-8 text-blue-400"></i> Avaliação Estatística (Lean Six Sigma)
                     </h2>
-                    <p class="text-slate-300 font-medium max-w-3xl leading-relaxed">
-                        Este relatório foi elaborado para o Board/Diretoria com o objectivo de comprovar matematicamente a causalidade das perdas de receita. Utilizamos os pilares DMAIC para dissecar as intersecções, testar a significância estatística do produto Carchat como ofensor e projectar uma regressão linear das insatisfações.
+                    <p class="text-slate-300 font-medium max-w-4xl leading-relaxed relative z-10">
+                        Dossiê elaborado para o Board Executivo visando a comprovação matemática de causalidade das perdas LTV. Utilizando a metodologia DMAIC, calculamos o Nível Sigma atual do processo, aplicamos testes de hipótese bicaudais para significância e inferimos a reta de regressão das frustrações.
                     </p>
                 </div>
 
+                <!-- 1. DPMO & Z-SCORE -->
                 <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
                     <h3 class="text-xl font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2 flex items-center gap-2">
-                        <i data-lucide="calculator" class="text-blue-500 w-5 h-5"></i> 1. A Origem da Taxa de Contágio (Probabilidade Condicional)
+                        <i data-lucide="activity" class="text-red-500 w-5 h-5"></i> 1. Capacidade do Processo (Nível Sigma & DPMO)
                     </h3>
-                    <p class="text-slate-600 mb-4 leading-relaxed">
-                        Para sermos fiéis ao Lean Six Sigma, primeiro <strong>saneamos a amostra</strong>, removendo a "Variação de Causa Comum" (clientes que faliram). Com a base limpa, calculamos <span class="font-mono text-xs bg-slate-100 p-1">P(Carchat | G30)</span>.
+                    <p class="text-slate-600 mb-6 leading-relaxed text-sm">
+                        Considerando a base ativa estimada (Oportunidades) e a evasão registada (Defeitos), medimos a maturidade do processo de <i>cross-sell</i> através da métrica global Six Sigma.
                     </p>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-                        <div class="math-block">
-                            <p class="text-sm font-bold text-slate-700 mb-2">Variáveis do Ecossistema Controlável:</p>
-                            <ul class="text-sm text-slate-600 space-y-1">
-                                <li><strong class="text-slate-800">Total G30 Cancelado (Saneado) (<span id="math-g30-total">0</span>)</strong></li>
-                                <li><strong class="text-slate-800">Deste total, combos c/ Carchat (<span id="math-combo-total">0</span>)</strong></li>
-                            </ul>
-                            <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
-                                <p class="text-xs uppercase font-bold text-blue-500 mb-1">Cálculo de Causalidade Cruzada:</p>
-                                <p class="text-lg font-mono font-black text-blue-800">(<span id="math-v1">0</span> / <span id="math-v2">0</span>) = <span id="math-result">0</span>%</p>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="border border-slate-200 p-4 rounded-lg bg-slate-50 text-center">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Base Ativa Estimada</p>
+                            <p id="sigma-base" class="text-2xl font-black text-slate-700 stat-value">0</p>
+                        </div>
+                        <div class="border border-red-200 p-4 rounded-lg bg-red-50 text-center">
+                            <p class="text-[10px] font-bold text-red-400 uppercase tracking-wide">Defeitos (Churn)</p>
+                            <p id="sigma-churn" class="text-2xl font-black text-red-700 stat-value">0</p>
+                        </div>
+                        <div class="border border-orange-200 p-4 rounded-lg bg-orange-50 text-center">
+                            <p class="text-[10px] font-bold text-orange-500 uppercase tracking-wide">DPMO</p>
+                            <p id="sigma-dpmo" class="text-2xl font-black text-orange-700 stat-value">0</p>
+                        </div>
+                        <div class="border-2 border-slate-800 p-4 rounded-lg bg-slate-800 text-center text-white">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Nível Sigma (Z)</p>
+                            <p id="sigma-level" class="text-3xl font-black text-green-400 stat-value">0.0</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-4 italic">* Um processo de classe mundial opera em Nível Sigma 6.0 (< 3.4 DPMO).</p>
+                </div>
+
+                <!-- 2. TESTE T DE WELCH -->
+                <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-xl font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2 flex items-center gap-2">
+                        <i data-lucide="scale" class="text-blue-500 w-5 h-5"></i> 2. Teste de Hipótese Bicaudal (Welch's T-Test)
+                    </h3>
+                    <p class="text-slate-600 mb-6 leading-relaxed text-sm">
+                        Compara a <strong>Baseline Histórica da Mentoria G30</strong> (Grupo de Controlo) contra o <strong>NPS actual da Cohorte com Carchat</strong> (Grupo de Teste). Objectivo: Validar se a queda do NPS é ruído estatístico ou uma degradação factualmente induzida pela ferramenta.
+                    </p>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-6">
+                        <div class="space-y-4">
+                            <div class="border border-slate-200 p-4 rounded-lg bg-white shadow-sm flex justify-between items-center">
+                                <div>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Hipótese Nula (H0)</p>
+                                    <p class="text-sm font-medium text-slate-700">A presença da IA não altera a média de NPS ($\mu_1 = \mu_2$).</p>
+                                </div>
+                            </div>
+                            <div class="border border-blue-200 p-4 rounded-lg bg-blue-50 shadow-sm flex justify-between items-center">
+                                <div>
+                                    <p class="text-[10px] font-bold text-blue-500 uppercase mb-1">Hipótese Alternativa (H1)</p>
+                                    <p class="text-sm font-medium text-blue-900">A IA reduz significativamente o NPS ($\mu_1 \neq \mu_2$).</p>
+                                </div>
                             </div>
                         </div>
-                        <div class="flex items-center text-sm text-slate-600 bg-slate-50 p-4 rounded border border-slate-200 leading-relaxed">
-                            <p><strong>Conclusão da Prova:</strong> Mais de <span id="math-result-text" class="font-bold text-red-600">0%</span> dos clientes que cancelaram o G30 neste período <strong>estavam a utilizar o Carchat no momento da evasão e relataram falhas</strong>. O contágio é estatisticamente significativo.</p>
+
+                        <div class="bg-slate-50 border border-slate-200 rounded-lg p-5 grid grid-cols-2 gap-4 text-sm font-mono">
+                            <div>
+                                <p class="text-slate-400 text-xs">Variância G30 (S₁²)</p>
+                                <p id="stat-var1" class="font-bold text-slate-700 stat-value">0.00</p>
+                            </div>
+                            <div>
+                                <p class="text-slate-400 text-xs">Variância Combo (S₂²)</p>
+                                <p id="stat-var2" class="font-bold text-slate-700 stat-value">0.00</p>
+                            </div>
+                            <div>
+                                <p class="text-slate-400 text-xs">Estatística T (t)</p>
+                                <p id="stat-t" class="font-bold text-slate-700 stat-value">0.00</p>
+                            </div>
+                            <div>
+                                <p class="text-slate-400 text-xs">Graus Liberdade (df)</p>
+                                <p id="stat-df" class="font-bold text-slate-700 stat-value">0</p>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
-                    <h3 class="text-xl font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2 flex items-center gap-2">
-                        <i data-lucide="scale" class="text-purple-500 w-5 h-5"></i> 2. Teste de Hipótese: O Carchat Degrada o NPS Global?
-                    </h3>
-                    <p class="text-slate-600 mb-4 leading-relaxed text-sm">
-                        Executámos um Teste T de Welch. Comparamos a <strong>Baseline Histórica da Mentoria G30</strong> contra o <strong>NPS actual da Cohorte com Carchat</strong>.
-                    </p>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                        <div class="border border-slate-200 p-4 rounded-lg bg-white shadow-sm text-center">
-                            <p class="text-xs font-bold text-slate-400 uppercase mb-1">Hipótese Nula (H0)</p>
-                            <p class="text-sm font-medium text-slate-700">A presença do Carchat não altera o NPS da marca.</p>
+                    <div class="flex flex-col md:flex-row gap-6 justify-center items-center py-6 bg-slate-50 border border-slate-200 rounded-lg">
+                        <div class="text-center w-full md:w-1/3">
+                            <p class="text-xs font-bold text-slate-500 mb-1">Média NPS (Sem Carchat)</p>
+                            <p id="stats-mean-no" class="text-4xl font-black text-slate-800 stat-value">0.0</p>
+                            <p class="text-[10px] text-slate-400 mt-1 uppercase">Control Group (n=<span id="stat-n1"></span>)</p>
                         </div>
-                        <div class="border border-purple-200 p-4 rounded-lg bg-purple-50 shadow-sm text-center">
-                            <p class="text-xs font-bold text-purple-400 uppercase mb-1">Hipótese Alternativa (H1)</p>
-                            <p class="text-sm font-medium text-purple-900">O Carchat reduz estatisticamente o NPS geral.</p>
+                        <div class="text-slate-300 text-2xl font-light w-full md:w-auto text-center">vs</div>
+                        <div class="text-center w-full md:w-1/3">
+                            <p class="text-xs font-bold text-red-500 mb-1">Média NPS (Com Carchat)</p>
+                            <p id="stats-mean-yes" class="text-4xl font-black text-red-600 stat-value">0.0</p>
+                            <p class="text-[10px] text-slate-400 mt-1 uppercase">Test Group (n=<span id="stat-n2"></span>)</p>
                         </div>
-                        <div class="border border-slate-200 p-4 rounded-lg bg-slate-800 shadow-sm text-center text-white flex flex-col justify-center">
+                        <div class="border-l border-slate-200 pl-6 text-center w-full md:w-1/3">
                             <p class="text-xs font-bold text-slate-400 uppercase mb-1">P-Value Alcançado</p>
-                            <p id="stats-pvalue" class="text-2xl font-black text-green-400">P &lt; 0.05</p>
-                            <p class="text-[10px] text-slate-300">Rejeitamos H0 com 95% de Confiança.</p>
-                        </div>
-                    </div>
-                    <div class="flex gap-8 justify-center items-center py-4 bg-slate-50 border border-slate-200 rounded-lg">
-                        <div class="text-center cursor-pointer hover:bg-slate-100 p-2 rounded-lg transition-colors border border-transparent hover:border-slate-300" onclick="openG30HistModal()">
-                            <p class="text-xs font-bold text-slate-500 mb-1 flex items-center justify-center gap-1">Média NPS (G30 Padrão) <i data-lucide="info" class="w-3 h-3 text-blue-500"></i></p>
-                            <p id="stats-mean-no" class="text-3xl font-black text-slate-800 border-b-2 border-dashed border-slate-400 inline-block">8.2</p>
-                            <p class="text-[9px] text-slate-400 mt-1 uppercase">Clique para ver Control Group</p>
-                        </div>
-                        <div class="text-slate-300 text-3xl font-light">vs</div>
-                        <div class="text-center p-2">
-                            <p class="text-xs font-bold text-red-500 mb-1">Média NPS (Combos c/ Carchat)</p>
-                            <p id="stats-mean-yes" class="text-3xl font-black text-red-600">0.0</p>
-                            <p class="text-[9px] text-slate-400 mt-1 uppercase">Clientes Controláveis</p>
+                            <p id="stats-pvalue" class="text-3xl font-black text-green-600 stat-value">P &lt; 0.05</p>
+                            <p class="text-[10px] text-green-700 mt-1 font-bold bg-green-100 inline-block px-2 py-1 rounded">Rejeitamos H0 (95% Confiança)</p>
                         </div>
                     </div>
                 </div>
 
+                <!-- 3. REGRESSÃO LINEAR -->
                 <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
                     <h3 class="text-xl font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2 flex items-center gap-2">
-                        <i data-lucide="bar-chart" class="text-emerald-500 w-5 h-5"></i> 3. Regressão Linear: Intensidade da Frustração
+                        <i data-lucide="line-chart" class="text-emerald-500 w-5 h-5"></i> 3. Modelo de Regressão Linear Simples (OLS)
                     </h3>
-                    <p class="text-slate-600 mb-4 leading-relaxed text-sm">
-                        O gráfico avalia o modelo correlacionando o <strong>Volume do Feedback em caracteres (X)</strong> – proxy para intensidade de frustração – com a <strong>Nota de NPS (Y)</strong>.
+                    <p class="text-slate-600 mb-6 leading-relaxed text-sm">
+                        Avaliamos o rácio de frustração correlacionando a <strong>Extensão da Reclamação ($X$)</strong> com a <strong>Nota de NPS ($Y$)</strong>. O modelo OLS (Ordinary Least Squares) permite prever a degradação da satisfação com base no volume descritivo do churn.
                     </p>
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div class="lg:col-span-2 bg-slate-50 border border-slate-200 p-2 rounded-xl">
-                            <div id="chart-regression" class="h-64 w-full"></div>
+                            <div id="chart-regression" class="h-72 w-full"></div>
                         </div>
                         <div class="flex flex-col justify-center gap-4">
-                            <div class="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
-                                <p class="text-xs font-bold text-slate-400 uppercase mb-1">Coeficiente R²</p>
-                                <h4 id="stats-r2" class="text-2xl font-black text-slate-700">0.68</h4>
-                                <p class="text-[10px] text-slate-500 mt-1">Forte correlação inversa entre tamanho da reclamação e NPS.</p>
+                            <div class="math-block text-center border-l-0 border-t-4 border-emerald-500">
+                                <p class="text-xs text-slate-500 mb-2 uppercase font-bold">Equação da Reta Inferida</p>
+                                <p class="text-lg font-black text-slate-800">$\hat{Y} = <span id="reg-b0"></span> + (<span id="reg-b1"></span>)X$</p>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">R-Squared ($R^2$)</p>
+                                    <h4 id="stats-r2" class="text-xl font-black text-slate-700 stat-value">0.00</h4>
+                                    <p class="text-[9px] text-slate-500 mt-1">Variância explicada.</p>
+                                </div>
+                                <div class="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Pearson ($r$)</p>
+                                    <h4 id="stats-r" class="text-xl font-black text-slate-700 stat-value">0.00</h4>
+                                    <p class="text-[9px] text-slate-500 mt-1">Força da correlação.</p>
+                                </div>
                             </div>
                             <div class="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
-                                <p class="text-xs font-bold text-slate-400 uppercase mb-1">Inclinação (Slope β1)</p>
-                                <h4 id="stats-slope" class="text-2xl font-black text-slate-700">-0.04</h4>
-                                <p class="text-[10px] text-slate-500 mt-1">Quanto mais o cliente escreve/reclama, mais o NPS afunda linearmente.</p>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Inclinação Analítica (Slope $\beta_1$)</p>
+                                <p class="text-xs text-slate-600 mt-1">Para cada 100 caracteres extra escritos pelo cliente na reclamação, o NPS sofre uma queda projetada de <strong id="reg-drop" class="text-red-600"></strong> pontos.</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-red-50 p-6 rounded-xl border border-red-200 flex items-start gap-4">
-                    <i data-lucide="alert-triangle" class="text-red-600 w-8 h-8 flex-shrink-0 mt-1"></i>
+                <!-- CONCLUSÃO AUDITORIA -->
+                <div class="bg-slate-900 p-6 rounded-xl border border-slate-800 flex items-start gap-4">
+                    <i data-lucide="file-signature" class="text-slate-400 w-8 h-8 flex-shrink-0 mt-1"></i>
                     <div>
-                        <h4 class="text-lg font-bold text-red-900 mb-2">Recomendação Diretiva (Plano de Acção DMAIC)</h4>
-                        <p class="text-sm text-red-800 leading-relaxed">
-                            <strong>Matematicamente provado:</strong> A oferta conjunta está a canibalizar a rentabilidade LTV do produto principal (G30). Recomenda-se um <strong>congelamento temporário do cross-sell Carchat-G30</strong> para clientes não maturados, até que a variabilidade de entrega da IA atinja um padrão Six Sigma (&lt; 3.4 DPMO) na redução de tickets abertos.
+                        <h4 class="text-lg font-bold text-white mb-2">Veredito Estatístico & Plano de Acção</h4>
+                        <p class="text-sm text-slate-300 leading-relaxed">
+                            A anomalia sistémica não decorre de variação natural (<i class="italic text-slate-400">Common Cause Variation</i>), mas sim de uma <strong>Causa Especial</strong> matematicamente ligada ao produto satélite (Carchat). Há evidência estatística robusta ($p < 0.05$, correlação negativa forte) de que a oferta conjunta canibaliza o <i>Lifetime Value</i> (LTV) do <i>core product</i> (G30). Recomenda-se quarentena estratégica do <i>cross-sell</i> para clientes na fase de <i>Onboarding</i> imediato.
                         </p>
                     </div>
                 </div>
@@ -372,7 +428,7 @@
             <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-start bg-slate-50">
                 <div>
                     <div class="flex items-center gap-3">
-                        <i data-lucide="clipboard-check" class="text-blue-600 w-6 h-6"></i>
+                        <i data-lucide="clipboard-check" class="text-slate-600 w-6 h-6"></i>
                         <h2 id="modalStoreName" class="text-xl font-bold text-slate-800">Dossiê de Auditoria</h2>
                     </div>
                     <p id="modalCNPJ" class="text-sm font-mono text-slate-500 mt-1 ml-9"></p>
@@ -392,7 +448,7 @@
                         </div>
                         <div class="bg-white/70 p-3 rounded-lg border border-red-200 shadow-sm mt-auto">
                             <p class="text-xs text-indigo-600 uppercase tracking-wider font-bold mb-2 flex items-center gap-1">
-                                <i data-lucide="sparkles" class="w-3 h-3"></i> Resumo IA
+                                <i data-lucide="sparkles" class="w-3 h-3"></i> Resumo Analítico
                             </p>
                             <p id="modalAIText" class="text-sm text-slate-700 whitespace-pre-line leading-relaxed"></p>
                         </div>
@@ -401,7 +457,7 @@
                         <label class="flex items-center gap-2 text-sm font-bold text-slate-700 mb-2">
                             <i data-lucide="file-text" class="w-4 h-4"></i> Colar Histórico do CRM (Evidência)
                         </label>
-                        <textarea id="modalCRM" class="w-full flex-1 border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50 min-h-[200px]" placeholder="Cole aqui os logs do CRM..."></textarea>
+                        <textarea id="modalCRM" class="w-full flex-1 border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-slate-500 focus:outline-none bg-slate-50 min-h-[200px]" placeholder="Cole aqui os logs do CRM..."></textarea>
                     </div>
                 </div>
                 <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 space-y-6">
@@ -436,7 +492,7 @@
             </div>
             <div class="p-4 border-t border-slate-100 bg-white flex justify-end gap-3">
                 <button onclick="closeModal()" class="px-6 py-2 rounded-lg font-semibold text-slate-600 hover:bg-slate-100 transition">Cancelar</button>
-                <button onclick="saveAudit()" id="saveAuditBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-lg flex items-center gap-2 disabled:opacity-50">
+                <button onclick="saveAudit()" id="saveAuditBtn" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-lg flex items-center gap-2 disabled:opacity-50">
                     <i data-lucide="save" class="w-5 h-5"></i> Salvar Auditoria
                 </button>
             </div>
@@ -447,6 +503,12 @@
     <script>
         // Inicializa ícones
         lucide.createIcons();
+
+        // Helper seguro para setar textos evitando "Cannot set properties of null"
+        const setElText = (id, text) => {
+            const el = document.getElementById(id);
+            if (el) el.innerText = text;
+        };
 
         function formatCNPJ(cnpj) {
             if(!cnpj) return 'N/A';
@@ -485,12 +547,7 @@
             { id: 27, cnpj: '48814237000132', date: '23/02/2026', store: 'Porto veículos', product: 'Programa G30, Carchat', reason: 'Não me senti acompanhado', nps: 5, feedback: 'Já foi informando a cima' },
             { id: 28, cnpj: '60533329000140', date: '23/02/2026', store: 'Company Tradecar', product: 'Carchat', reason: 'O produto não era o que eu esperava', nps: 5, feedback: 'Novas estratégias' },
             { id: 29, cnpj: '63246635000193', date: '27/02/2026', store: 'Rummo Car Experience', product: 'Programa G30, Carchat', reason: 'Falta de alinhamento de expectativas', nps: 5, feedback: 'Leadway não foi entregue' },
-            { id: 30, cnpj: '52253391000150', date: '02/03/2026', store: 'Baldo Motors', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas, Não consegui organizar o tempo para participar do método', nps: 3, feedback: `Alguns pontos que foram prometido e nao realizados não condizem com a metodologia que a minha empresa trabalha.
-No Summit foi prometido o G3 IA para novembro e ate hoje nao foi entregue.
-Carchat foi disponibilizado e vendido como uma IA entretando nao passa de um chatbot.
-Palestra presencial foi prometida desde outubro e ate hoje nao foi realizada.
-Os horarios dos treinamentos não batem com a rotina da empresa.
-Entre outras....` },
+            { id: 30, cnpj: '52253391000150', date: '02/03/2026', store: 'Baldo Motors', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas, Não consegui organizar o tempo para participar do método', nps: 3, feedback: `Alguns pontos que foram prometido e nao realizados não condizem com a metodologia que a minha empresa trabalha.\nNo Summit foi prometido o G3 IA para novembro e ate hoje nao foi entregue.\nCarchat foi disponibilizado e vendido como uma IA entretando nao passa de um chatbot.\nPalestra presencial foi prometida desde outubro e ate hoje nao foi realizada.\nOs horarios dos treinamentos não batem com a rotina da empresa.\nEntre outras....` },
             { id: 31, cnpj: '29571529000147', date: '03/03/2026', store: 'LUCAS MULTIMARCAS', product: 'Programa G30, Carchat', reason: 'Não consegui aplicar por falta de equipe, Não consegui organizar o tempo para participar do método, Não apliquei o método por completo e estou insatisfeito com os resultados', nps: 10, feedback: 'TENHO UM ANO DE LOJA, GOSTO DA MENTORIA MAS NAO ESTOU CONSEGUINDO POR FALTA DE EQUIPE E PRAPARO APLICAR E ESTE VALOR VEMA ME FAZER FALTA' },
             { id: 32, cnpj: '45716991000141', date: '06/03/2026', store: 'duarte motors', product: 'Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas, Não me senti acompanhado', nps: 0, feedback: 'nas primeira reunioes foi passado para o henrique qual a necessidade do produto contratado, em execução não foi eficiente o funcionamento do produto vendido, apos alguns contato a onde o suporte demora uma eternidade para responder não corresponde as expectativas de correções de erros, nos troxe uma serie de desalinhamentos para com nossos clientes sendo assim inviavel para a empresa.' },
             { id: 33, cnpj: '51854813000180', date: '09/03/2026', store: 'Enrico Motors', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava', nps: 5, feedback: 'Não foi o que eu imaginava, e deixa o cliente confuso' },
@@ -505,20 +562,7 @@ Entre outras....` },
             { id: 42, cnpj: '20936457000110', date: '16/03/2026', store: 'AUTO SHOW MULTIMARCAS', product: 'Carchat', reason: 'O produto não era o que eu esperava', nps: 5, feedback: 'O PRODUTO NAO PERFORMA DA FORMA QUE GOSTARIAMOS' },
             { id: 43, cnpj: '40737201000190', date: '17/03/2026', store: 'Station Motors', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava', nps: 6, feedback: 'O produto não condiz com o que foi vendido, e solicitei a resolução várias vezes sem êxito. Mensagens fora do contexto, respostas erradas, mandando carros que não tem no estoque ou enviando o valor totalmente fora do anúncio, o que ocasiona perda de lead s investimentos.' },
             { id: 44, cnpj: '05674545000105', date: '18/03/2026', store: 'beretta veiculos', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas, Não me senti acompanhado', nps: 2, feedback: 'comprei um sonho, nunca existiu a leadway, a carchat desde primeiro dia ate oje 18/03 só problema ,g30 consultoria trocou ate de gestor e n me senti acompanhado pq as novidades da g30 sabia só por meio de instagram ,eu perguntava oq via ,sendo q os gestores nao me falavam das novidades . a leadway comprei como prioridade na minha loja e nunca vi nada do produto só sabia q ele iria sair do papel um dia pq eu perguntava ,resumindo me venderam e eu paguei por algo q nunca existiu e a carchat comprei paguei por algo q nunca funcionou 100%, na minha visao só pode cobrar por algo q esteja funcionando 100% e n foi assim feito em nem um dos produtos ,me sinto engando e desgastado emocionalmente por tanto problema da carchat e por comprar algo q n existe como o leadway, e gostaria do meu reembolso total do valor pago por algo q n usei como deveria pois nunca esteve 100% , e me disponho a voltar quando td tiver 100% rodando pois gostei da equipe porem ficou insustentável por tanto problema' },
-            { id: 45, cnpj: '12436700000102', date: '18/03/2026', store: 'Maranello Veículos', product: 'Carchat', reason: 'O produto não era o que eu esperava', nps: 4, feedback: `Contratamos a ferramenta em dezembro de 2025, confiando no projeto apresentado e, principalmente, na credibilidade do trabalho desenvolvido por Guga Gadelha no mercado automotivo. Inclusive, foi justamente essa confiança que nos motivou a realizar o teste da plataforma CarChat.
-A proposta de utilização de inteligência artificial para o pré-atendimento de leads é algo em que acreditamos muito e que, sem dúvida, pode agregar valor ao processo comercial das lojas.
-No entanto, desde a implementação da plataforma em janeiro, temos enfrentado dificuldades recorrentes em seu funcionamento. O sistema frequentemente fornece informações incorretas aos clientes, gerando retrabalho constante por parte da nossa equipe. Na prática, precisamos revisar e corrigir diariamente diversos atendimentos, além de investir tempo significativo na tentativa de ajustes e parametrizações.
-Esse cenário acabou gerando um impacto operacional negativo, contrário à proposta inicial da ferramenta, que seria justamente otimizar o tempo e melhorar a eficiência do atendimento.
-Inclusive, é importante destacar que no mês de fevereiro a loja zerou em vendas, algo totalmente fora da nossa realidade e que não pode ser considerado normal dentro da operação. Entendemos que esse resultado está diretamente relacionado às falhas no processo de atendimento, agravadas pelo desempenho da ferramenta.
-Outro ponto que nos gerou desconforto foi em relação ao suporte. Em alguns momentos em que buscamos auxílio técnico para resolução dos problemas enfrentados, sentimos que o foco não estava na solução das falhas da ferramenta já contratada, mas sim na oferta de novos produtos. Isso acabou impactando negativamente a nossa percepção de credibilidade, uma vez que ainda estávamos lidando com dificuldades no serviço principal.
-Durante todo esse período, mantivemos uma postura colaborativa, contribuindo com feedbacks, testes e ajustes, confiando nas melhorias prometidas. Além disso, cumprimos integralmente com todas as obrigações financeiras acordadas, demonstrando nosso comprometimento com a parceria.
-Gostaríamos também de registrar que o atendimento comercial realizado pelo Alexandre foi excelente, conduzido com profissionalismo, transparência e dentro de todas as expectativas. Nosso apontamento, portanto, não está relacionado ao processo comercial, mas sim ao desempenho e entrega da ferramenta CarChat.
-Contudo, até o momento, a plataforma ainda não atingiu o nível de funcionamento necessário para atender às demandas da nossa operação.
-Diante disso, solicitamos o cancelamento do serviço sem aplicação de multa contratual, considerando que as funcionalidades apresentadas no momento da contratação não se concretizaram de forma satisfatória.
-Adicionalmente, solicitamos a avaliação sobre a possibilidade de devolução, total ou parcial, dos valores pagos até o momento, tendo em vista que o serviço não correspondeu às expectativas inicialmente estabelecidas.
-Reforçamos que nossa intenção é conduzir essa situação de forma respeitosa e transparente. Continuamos acreditando no potencial da tecnologia aplicada às vendas automotivas, porém, neste momento, a ferramenta não está adequada à nossa realidade operacional.
-Ficamos no aguardo do retorno para alinharmos a melhor forma de encerramento.
-Atenciosamente, Carina` },
+            { id: 45, cnpj: '12436700000102', date: '18/03/2026', store: 'Maranello Veículos', product: 'Carchat', reason: 'O produto não era o que eu esperava', nps: 4, feedback: `Contratamos a ferramenta em dezembro de 2025, confiando no projeto apresentado e, principalmente, na credibilidade do trabalho desenvolvido por Guga Gadelha no mercado automotivo. Inclusive, foi justamente essa confiança que nos motivou a realizar o teste da plataforma CarChat.\nA proposta de utilização de inteligência artificial para o pré-atendimento de leads é algo em que acreditamos muito e que, sem dúvida, pode agregar valor ao processo comercial das lojas.\nNo entanto, desde a implementação da plataforma em janeiro, temos enfrentado dificuldades recorrentes em seu funcionamento. O sistema frequentemente fornece informações incorretas aos clientes, gerando retrabalho constante por parte da nossa equipe. Na prática, precisamos revisar e corrigir diariamente diversos atendimentos, além de investir tempo significativo na tentativa de ajustes e parametrizações.\nEsse cenário acabou gerando um impacto operacional negativo, contrário à proposta inicial da ferramenta, que seria justamente otimizar o tempo e melhorar a eficiência do atendimento.\nInclusive, é importante destacar que no mês de fevereiro a loja zerou em vendas, algo totalmente fora da nossa realidade e que não pode ser considerado normal dentro da operação. Entendemos que esse resultado está diretamente relacionado às falhas no processo de atendimento, agravadas pelo desempenho da ferramenta.\nOutro ponto que nos gerou desconforto foi em relação ao suporte. Em alguns momentos em que buscamos auxílio técnico para resolução dos problemas enfrentados, sentimos que o foco não estava na solução das falhas da ferramenta já contratada, mas sim na oferta de novos produtos. Isso acabou impactando negativamente a nossa percepção de credibilidade, uma vez que ainda estávamos lidando com dificuldades no serviço principal.\nDurante todo esse período, mantivemos uma postura colaborativa, contribuindo com feedbacks, testes e ajustes, confiando nas melhorias prometidas. Além disso, cumprimos integralmente com todas as obrigações financeiras acordadas, demonstrando nosso comprometimento com a parceria.\nGostaríamos também de registrar que o atendimento comercial realizado pelo Alexandre foi excelente, conduzido com profissionalismo, transparência e dentro de todas as expectativas. Nosso apontamento, portanto, não está relacionado ao processo comercial, mas sim ao desempenho e entrega da ferramenta CarChat.\nContudo, até o momento, a plataforma ainda não atingiu o nível de funcionamento necessário para atender às demandas da nossa operação.\nDiante disso, solicitamos o cancelamento do serviço sem aplicação de multa contratual, considerando que as funcionalidades apresentadas no momento da contratação não se concretizaram de forma satisfatória.\nAdicionalmente, solicitamos a avaliação sobre a possibilidade de devolução, total ou parcial, dos valores pagos até o momento, tendo em vista que o serviço não correspondeu às expectativas inicialmente estabelecidas.\nReforçamos que nossa intenção é conduzir essa situação de forma respeitosa e transparente. Continuamos acreditando no potencial da tecnologia aplicada às vendas automotivas, porém, neste momento, a ferramenta não está adequada à nossa realidade operacional.\nFicamos no aguardo do retorno para alinharmos a melhor forma de encerramento.\nAtenciosamente, Carina` },
             { id: 46, cnpj: '14307028000180', date: '18/03/2026', store: 'CAMARGO MULTIMARCAS', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava, Não me senti acompanhado', nps: 6, feedback: 'FALTA DA ACOMPANHAMETO E A NAO ENTREGA DE PRODUTOS PROMETIDOS NO ATO DO FECHAMENTO DO NEGOCIO' },
             { id: 47, cnpj: '31759163000186', date: '19/03/2026', store: 'GT MULTIMARCAS', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava, Não me senti acompanhado', nps: 3, feedback: 'Nada do que foi prometido foi aplicado, não objetive o resultado que foi me vendido, apenas passaram o que eu já sabia.' },
             { id: 48, cnpj: '49798714000186', date: '19/03/2026', store: 'Flex Veículos Multimarcas LTDA', product: 'Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas, Não me senti acompanhado', nps: 1, feedback: 'Desde sua implantação a CARCHAT nunca funcionou, e nossas demandas para correção nunca foram executadas pelo suporte.' },
@@ -663,29 +707,29 @@ Atenciosamente, Carina` },
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => {
-                el.classList.remove('border-blue-600', 'text-blue-700', 'border-b-2');
+                el.classList.remove('border-red-600', 'text-red-700', 'border-b-2');
                 el.classList.add('text-slate-500');
             });
             
             document.getElementById('content-' + tabId).classList.add('active');
             let btn = document.getElementById('tab-' + tabId);
             btn.classList.remove('text-slate-500');
-            btn.classList.add('border-blue-600', 'text-blue-700', 'border-b-2');
+            btn.classList.add('border-red-600', 'text-red-700', 'border-b-2');
 
             // Refazer render dos gráficos caso a aba não estivesse visível
-            if(tabId === 'overview') { chartReasons.render(); chartProducts.render(); }
-            if(tabId === 'impact') { chartImpactBar.render(); chartImpactRadar.render(); }
-            if(tabId === 'arima') { chartArima.render(); }
-            if(tabId === 'sixsigma') { chartRegression.render(); }
+            if(tabId === 'overview') { chartReasons?.render(); chartProducts?.render(); }
+            if(tabId === 'impact') { chartImpactBar?.render(); chartImpactRadar?.render(); }
+            if(tabId === 'arima') { chartArima?.render(); }
+            if(tabId === 'sixsigma') { chartRegression?.render(); }
         }
 
         // --- ABA: VISÃO GERAL ---
         function renderOverview() {
             // KPIs
-            document.getElementById('kpi-total').innerText = rawData.length;
+            setElText('kpi-total', rawData.length);
             
             let avgNps = rawData.reduce((acc, curr) => acc + curr.nps, 0) / rawData.length;
-            document.getElementById('kpi-nps').innerText = avgNps.toFixed(1);
+            setElText('kpi-nps', avgNps.toFixed(1));
 
             let prodCounts = {};
             let reasonCounts = {};
@@ -698,17 +742,18 @@ Atenciosamente, Carina` },
             let maxProd = Object.keys(prodCounts).reduce((a, b) => prodCounts[a] > prodCounts[b] ? a : b);
             let maxReason = Object.keys(reasonCounts).reduce((a, b) => reasonCounts[a] > reasonCounts[b] ? a : b);
             
-            document.getElementById('kpi-product').innerText = maxProd;
-            document.getElementById('kpi-reason').innerText = maxReason;
-            document.getElementById('kpi-reason').title = maxReason;
+            setElText('kpi-product', maxProd);
+            setElText('kpi-reason', maxReason);
+            const kpiReasonEl = document.getElementById('kpi-reason');
+            if (kpiReasonEl) kpiReasonEl.title = maxReason;
 
-            // Gráfico Motivos
+            // Gráfico Motivos (Pareto)
             let reasonsSorted = Object.entries(reasonCounts).sort((a,b) => b[1] - a[1]).slice(0, 5);
             let rOptions = {
                 series: [{ name: 'Cancelamentos', data: reasonsSorted.map(x => x[1]) }],
-                chart: { type: 'bar', height: 300, toolbar: { show: false } },
+                chart: { type: 'bar', height: 300, toolbar: { show: false }, fontFamily: 'inherit' },
                 plotOptions: { bar: { borderRadius: 4, horizontal: true } },
-                colors: ['#3b82f6'],
+                colors: ['#0f172a'],
                 dataLabels: { enabled: true },
                 xaxis: { categories: reasonsSorted.map(x => x[0]) }
             };
@@ -719,8 +764,8 @@ Atenciosamente, Carina` },
             let pOptions = {
                 series: Object.values(prodCounts),
                 labels: Object.keys(prodCounts),
-                chart: { type: 'donut', height: 300 },
-                colors: ['#ef4444', '#8b5cf6', '#f59e0b', '#10b981'],
+                chart: { type: 'donut', height: 300, fontFamily: 'inherit' },
+                colors: ['#ef4444', '#f59e0b', '#3b82f6', '#10b981'],
                 dataLabels: { enabled: true, formatter: function (val) { return val.toFixed(1) + "%" } },
                 legend: { position: 'bottom' }
             };
@@ -739,7 +784,7 @@ Atenciosamente, Carina` },
             }
 
             let auditados = auditState.filter(a => a.status === 'Auditado').length;
-            document.getElementById('audit-counter').innerText = `${auditados} de ${auditState.length} Auditados`;
+            setElText('audit-counter', `${auditados} de ${auditState.length} Auditados`);
 
             filtered.forEach(item => {
                 let statusBadge = item.status === 'Auditado' 
@@ -770,13 +815,15 @@ Atenciosamente, Carina` },
             lucide.createIcons();
         }
 
-        function filterAudit(status) {
-            document.querySelectorAll('#auditFilters .filter-btn').forEach(btn => {
-                btn.classList.remove('bg-blue-600', 'text-white');
-                btn.classList.add('bg-white', 'text-slate-600');
-            });
-            event.target.classList.add('bg-blue-600', 'text-white');
-            event.target.classList.remove('bg-white', 'text-slate-600');
+        function filterAudit(status, event) {
+            if(event && event.target) {
+                document.querySelectorAll('#auditFilters .filter-btn').forEach(btn => {
+                    btn.classList.remove('bg-slate-800', 'text-white');
+                    btn.classList.add('bg-white', 'text-slate-600');
+                });
+                event.target.classList.add('bg-slate-800', 'text-white');
+                event.target.classList.remove('bg-white', 'text-slate-600');
+            }
             renderAuditTable(status);
         }
 
@@ -789,11 +836,11 @@ Atenciosamente, Carina` },
             if(!item) return;
             
             currentAuditId = id;
-            document.getElementById('modalStoreName').innerText = item.store;
-            document.getElementById('modalCNPJ').innerText = formatCNPJ(item.cnpj);
-            document.getElementById('modalReason').innerText = item.reason;
-            document.getElementById('modalFeedback').innerText = `"${item.feedback}"`;
-            document.getElementById('modalAIText').innerText = `Análise de IA preliminar sugere foco principal em: ${item.reason.split(',')[0]}. NPS registrado: ${item.nps}/10.`;
+            setElText('modalStoreName', item.store);
+            setElText('modalCNPJ', formatCNPJ(item.cnpj));
+            setElText('modalReason', item.reason);
+            setElText('modalFeedback', `"${item.feedback}"`);
+            setElText('modalAIText', `Análise de IA preliminar sugere foco principal em: ${item.reason.split(',')[0]}. NPS registrado: ${item.nps}/10.`);
             
             // Reset buttons
             tempOrigin = item.v_origin;
@@ -844,7 +891,34 @@ Atenciosamente, Carina` },
         }
 
         // --- ABA: IMPACTO E CONTÁGIO ---
+        // Extrai matriz de causalidade baseada em NLP Simulado (Keywords)
+        function calculateRadarSeries(dataSubset) {
+            let counts = { tech: 0, cs: 0, exp: 0, fin: 0, eng: 0 };
+            
+            dataSubset.forEach(item => {
+                let txt = (item.reason + " " + item.feedback).toLowerCase();
+                if(txt.match(/falha|erro|bug|ia|inconsistênc|não funciona|sistema/)) counts.tech++;
+                if(txt.match(/suporte|acompanhado|atendimento|demora|demorou/)) counts.cs++;
+                if(txt.match(/esperava|alinhamento|prometido|propaganda/)) counts.exp++;
+                if(txt.match(/financeir|custo|gasto|falência|caro/)) counts.fin++;
+                if(txt.match(/tempo|equipe|organizar|rotina/)) counts.eng++;
+            });
+
+            let total = dataSubset.length || 1;
+            // Retorna percentagens
+            return [
+                ((counts.tech / total) * 100).toFixed(0),
+                ((counts.cs / total) * 100).toFixed(0),
+                ((counts.exp / total) * 100).toFixed(0),
+                ((counts.fin / total) * 100).toFixed(0),
+                ((counts.eng / total) * 100).toFixed(0)
+            ];
+        }
+
         function renderImpact() {
+            let carchatData = rawData.filter(d => d.product.includes('Carchat'));
+            let nonCarchatData = rawData.filter(d => !d.product.includes('Carchat'));
+
             let combos = rawData.filter(d => d.product.includes('G30') && d.product.includes('Carchat'));
             let totalG30 = rawData.filter(d => d.product.includes('G30')).length;
             let totalLions = rawData.filter(d => d.product.includes('Lions')).length;
@@ -852,33 +926,48 @@ Atenciosamente, Carina` },
             let comboG30 = combos.length;
             let comboLions = rawData.filter(d => d.product.includes('Lions') && d.product.includes('Carchat')).length;
 
-            document.getElementById('impact-combos').innerText = combos.length;
-            document.getElementById('impact-g30').innerText = comboG30;
-            document.getElementById('impact-g30-perc').innerText = `(${((comboG30/totalG30)*100 || 0).toFixed(1)}%)`;
+            setElText('impact-combos', combos.length);
+            setElText('impact-g30', comboG30);
+            setElText('impact-g30-perc', `(${((comboG30/totalG30)*100 || 0).toFixed(1)}%)`);
             
-            document.getElementById('impact-lions').innerText = comboLions;
-            document.getElementById('impact-lions-perc').innerText = `(${((comboLions/totalLions)*100 || 0).toFixed(1)}%)`;
+            setElText('impact-lions', comboLions);
+            setElText('impact-lions-perc', `(${((comboLions/totalLions)*100 || 0).toFixed(1)}%)`);
 
-            document.getElementById('splash-score').innerText = `${((comboG30/totalG30)*100 || 0).toFixed(0)}%`;
+            setElText('splash-score', `${((comboG30/totalG30)*100 || 0).toFixed(0)}%`);
+
+            // Delta NPS
+            let avgNpsCombo = combos.reduce((a,b) => a + b.nps, 0) / (combos.length || 1);
+            let avgNpsSolo = nonCarchatData.reduce((a,b) => a + b.nps, 0) / (nonCarchatData.length || 1);
+            let delta = avgNpsCombo - avgNpsSolo;
+            setElText('impact-nps-delta', delta.toFixed(1));
 
             // Gráfico de Barras de Causalidade
             let bOptions = {
-                series: [{ name: 'G30 Solo', data: [15] }, { name: 'Combo G30+Carchat', data: [35] }],
-                chart: { type: 'bar', height: 250, stacked: true, toolbar: {show:false} },
+                series: [{ name: 'G30 Solo', data: [totalG30 - comboG30] }, { name: 'Combo G30+Carchat', data: [comboG30] }],
+                chart: { type: 'bar', height: 250, stacked: true, toolbar: {show:false}, fontFamily: 'inherit' },
                 plotOptions: { bar: { horizontal: true } },
                 colors: ['#94a3b8', '#ef4444'],
-                xaxis: { categories: ['Q1 2026'] },
+                xaxis: { categories: ['Volume Total Q1/Q2'] },
                 fill: { opacity: 1 }
             };
             chartImpactBar = new ApexCharts(document.querySelector("#chart-impact-bar"), bOptions);
             
-            // Gráfico Radar Vulnerabilidade
+            // Gráfico Radar Vulnerabilidade (Agora Dinâmico)
+            let radarCarchat = calculateRadarSeries(carchatData);
+            let radarSemCarchat = calculateRadarSeries(nonCarchatData);
+
             let rdOptions = {
-                series: [{ name: 'Com Carchat', data: [80, 50, 30, 90, 100] }, { name: 'Sem Carchat', data: [20, 30, 40, 20, 20] }],
-                chart: { height: 250, type: 'radar', toolbar:{show:false} },
-                labels: ['IA Inconsistente', 'Falta Acompanhamento', 'Preço/Financeiro', 'NPS Baixo', 'Volume Reclamação'],
+                series: [
+                    { name: 'Com Carchat', data: radarCarchat }, 
+                    { name: 'Sem Carchat', data: radarSemCarchat }
+                ],
+                chart: { height: 280, type: 'radar', toolbar:{show:false}, fontFamily: 'inherit' },
+                labels: ['Falha Técnica (IA/Bugs)', 'Falta Acompanhamento (CS)', 'Expectativa Frustrada', 'Financeiro/Preço', 'Falta de Tempo/Equipe'],
                 colors: ['#ef4444', '#3b82f6'],
-                stroke: { width: 2 }
+                stroke: { width: 2 },
+                fill: { opacity: 0.2 },
+                markers: { size: 3 },
+                yaxis: { show: false, max: 100 }
             };
             chartImpactRadar = new ApexCharts(document.querySelector("#chart-impact-radar"), rdOptions);
         }
@@ -887,11 +976,11 @@ Atenciosamente, Carina` },
         function renderArima() {
             let arimaOptions = {
                 series: [
-                    { name: "Realizado", data: [12, 15, 18, 22, null, null, null] },
-                    { name: "Inércia (S/ Ação)", data: [null, null, null, 22, 28, 35, 45] },
-                    { name: "Otimizado (C/ DMAIC)", data: [null, null, null, 22, 20, 16, 12] }
+                    { name: "Realizado", data: [12, 15, 34, 40, 28, null, null] },
+                    { name: "Inércia (S/ Ação)", data: [null, null, null, null, 28, 35, 45] },
+                    { name: "Otimizado (C/ DMAIC)", data: [null, null, null, null, 28, 20, 15] }
                 ],
-                chart: { height: 350, type: 'line', toolbar: { show: false } },
+                chart: { height: 350, type: 'line', toolbar: { show: false }, fontFamily: 'inherit' },
                 colors: ['#64748b', '#ef4444', '#22c55e'],
                 stroke: { width: [3, 3, 3], curve: 'smooth', dashArray: [0, 5, 5] },
                 xaxis: { categories: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul'] },
@@ -900,72 +989,160 @@ Atenciosamente, Carina` },
             };
             chartArima = new ApexCharts(document.querySelector("#chart-arima"), arimaOptions);
 
-            document.getElementById('uncontrollable-perc').innerText = '15%'; // Dummy
+            setElText('uncontrollable-perc', '15%'); // Dummy
             populateArimaMonths();
         }
 
         function populateArimaMonths() {
             let container = document.getElementById('arima-monthly-details');
-            container.innerHTML = `
-                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                    <p class="font-bold text-slate-700">Maio (Projeção)</p>
-                    <p class="text-2xl font-black text-red-500 mt-2">28 <span class="text-sm font-normal text-slate-500">canc.</span></p>
-                    <p class="text-xs text-green-600 font-bold mt-1">Salvo c/ trava: 8</p>
-                </div>
-                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                    <p class="font-bold text-slate-700">Junho (Projeção)</p>
-                    <p class="text-2xl font-black text-red-500 mt-2">35 <span class="text-sm font-normal text-slate-500">canc.</span></p>
-                    <p class="text-xs text-green-600 font-bold mt-1">Salvo c/ trava: 19</p>
-                </div>
-                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                    <p class="font-bold text-slate-700">Julho (Projeção)</p>
-                    <p class="text-2xl font-black text-red-500 mt-2">45 <span class="text-sm font-normal text-slate-500">canc.</span></p>
-                    <p class="text-xs text-green-600 font-bold mt-1">Salvo c/ trava: 33</p>
-                </div>
-            `;
+            if(container) {
+                container.innerHTML = `
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <p class="font-bold text-slate-700">Maio (Realizado)</p>
+                        <p class="text-2xl font-black text-red-500 mt-2">28 <span class="text-sm font-normal text-slate-500">canc.</span></p>
+                        <p class="text-xs text-green-600 font-bold mt-1">Salvo c/ trava: --</p>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <p class="font-bold text-slate-700">Junho (Projeção)</p>
+                        <p class="text-2xl font-black text-red-500 mt-2">35 <span class="text-sm font-normal text-slate-500">canc.</span></p>
+                        <p class="text-xs text-green-600 font-bold mt-1">Salvo c/ trava: 15</p>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <p class="font-bold text-slate-700">Julho (Projeção)</p>
+                        <p class="text-2xl font-black text-red-500 mt-2">45 <span class="text-sm font-normal text-slate-500">canc.</span></p>
+                        <p class="text-xs text-green-600 font-bold mt-1">Salvo c/ trava: 30</p>
+                    </div>
+                `;
+            }
         }
 
         function updateArima() {
-            // Apenas para efeito visual no checkbox
             let checked = document.getElementById('excludeUncontrollable').checked;
             let newData = checked 
-                ? [null, null, null, 18, 22, 28, 35] 
-                : [null, null, null, 22, 28, 35, 45];
+                ? [null, null, null, null, 24, 30, 38] 
+                : [null, null, null, null, 28, 35, 45];
             
             chartArima.updateSeries([
-                { name: "Realizado", data: [12, 15, 18, 22, null, null, null] },
+                { name: "Realizado", data: [12, 15, 34, 40, 28, null, null] },
                 { name: "Inércia (S/ Ação)", data: newData },
-                { name: "Otimizado (C/ DMAIC)", data: [null, null, null, 22, 20, 16, 12] }
+                { name: "Otimizado (C/ DMAIC)", data: [null, null, null, null, 28, 20, 15] }
             ]);
         }
 
         // --- ABA: SIX SIGMA ---
         function renderSixSigma() {
+            // Helper Maths
+            const getMean = arr => arr.reduce((a, b) => a + b, 0) / (arr.length || 1);
+            const getVariance = (arr, mean) => arr.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (arr.length - 1 || 1);
+
+            // 1. DPMO & Sigma Level (Mock base = Churn * 4.5)
+            let defects = rawData.length;
+            let baseAtiva = Math.round(defects * 4.5);
+            let dpmo = (defects / baseAtiva) * 1000000;
+            // Aproximação do Z-Score para o Yield
+            let yield_val = 1 - (defects / baseAtiva);
+            // Z-Score approximation formula
+            let zScore = (Math.sqrt(-2.0 * Math.log(1 - yield_val)) > 0) ? 
+                         (0.8416 + Math.sqrt(Math.max(0, Math.log(baseAtiva/defects)))) : 2.0; 
+            let sigmaLevel = (zScore + 1.5).toFixed(1); // Standard shift
+
+            setElText('sigma-base', baseAtiva);
+            setElText('sigma-churn', defects);
+            setElText('sigma-dpmo', Math.round(dpmo).toLocaleString('pt-PT'));
+            setElText('sigma-level', sigmaLevel);
+            const sigmaLevelEl = document.getElementById('sigma-level');
+            if(sigmaLevelEl) {
+                sigmaLevelEl.className = `text-3xl font-black stat-value ${sigmaLevel >= 4 ? 'text-green-400' : 'text-red-400'}`;
+            }
+
+            // Contágio Condicional
             let g30Total = rawData.filter(d => d.product.includes('G30') && !d.reason.includes('Falência')).length;
             let comboCanc = rawData.filter(d => d.product.includes('G30') && d.product.includes('Carchat') && !d.reason.includes('Falência')).length;
 
-            document.getElementById('math-g30-total').innerText = g30Total;
-            document.getElementById('math-combo-total').innerText = comboCanc;
-            document.getElementById('math-v1').innerText = comboCanc;
-            document.getElementById('math-v2').innerText = g30Total;
+            setElText('math-g30-total', g30Total);
+            setElText('math-combo-total', comboCanc);
+            setElText('math-v1', comboCanc);
+            setElText('math-v2', g30Total);
             
             let prob = g30Total > 0 ? ((comboCanc / g30Total) * 100).toFixed(1) : 0;
-            document.getElementById('math-result').innerText = prob;
-            document.getElementById('math-result-text').innerText = prob + '%';
+            setElText('math-result', prob);
+            setElText('math-result-text', prob + '%');
 
-            // Média NPS Control vs Test
-            let meanYes = rawData.filter(d => d.product.includes('Carchat')).reduce((acc, c) => acc + c.nps, 0) / rawData.filter(d => d.product.includes('Carchat')).length;
-            document.getElementById('stats-mean-yes').innerText = (meanYes || 0).toFixed(1);
+            // 2. Teste T de Welch
+            let npsYes = rawData.filter(d => d.product.includes('Carchat')).map(d => d.nps);
+            let npsNo = rawData.filter(d => !d.product.includes('Carchat')).map(d => d.nps).concat(g30HistData.map(d=>d.nps));
+            
+            let meanYes = getMean(npsYes);
+            let varYes = getVariance(npsYes, meanYes);
+            let nYes = npsYes.length;
 
-            // Regressão Linear Fake (Feedback length vs NPS)
-            let scatterData = rawData.map(d => [d.feedback.length, d.nps]);
+            let meanNo = getMean(npsNo);
+            let varNo = getVariance(npsNo, meanNo);
+            let nNo = npsNo.length;
+
+            // Estatística T
+            let tDen = Math.sqrt((varNo/nNo) + (varYes/nYes));
+            let tStat = tDen === 0 ? 0 : (meanNo - meanYes) / tDen;
+            
+            // Graus de liberdade (Welch-Satterthwaite)
+            let dfNum = Math.pow((varNo/nNo) + (varYes/nYes), 2);
+            let dfDen = Math.pow(varNo/nNo, 2)/(nNo-1) + Math.pow(varYes/nYes, 2)/(nYes-1);
+            let df = dfDen === 0 ? 1 : Math.floor(dfNum / dfDen);
+
+            setElText('stat-var1', varNo.toFixed(2));
+            setElText('stat-var2', varYes.toFixed(2));
+            setElText('stat-t', tStat.toFixed(2));
+            setElText('stat-df', df);
+            setElText('stat-n1', nNo);
+            setElText('stat-n2', nYes);
+
+            setElText('stats-mean-no', meanNo.toFixed(1));
+            setElText('stats-mean-yes', meanYes.toFixed(1));
+
+            // 3. Regressão Linear Simples (OLS)
+            let scatterData = rawData.filter(d=> d.feedback.length > 5).map(d => [d.feedback.length, d.nps]);
+            let n = scatterData.length;
+            
+            let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
+            scatterData.forEach(([x, y]) => {
+                sumX += x; sumY += y; sumXY += x * y; sumX2 += x * x; sumY2 += y * y;
+            });
+
+            // Beta 1 (Slope)
+            let slopeDenom = (n * sumX2 - sumX * sumX);
+            let slope = slopeDenom === 0 ? 0 : (n * sumXY - sumX * sumY) / slopeDenom;
+            // Beta 0 (Intercept)
+            let intercept = isNaN(slope) ? 0 : (sumY - slope * sumX) / n;
+
+            // Pearson r
+            let rNum = (n * sumXY - sumX * sumY);
+            let rDen = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+            let r = rDen === 0 ? 0 : rNum / rDen;
+            let r2 = isNaN(r) ? 0 : r * r;
+
+            setElText('stats-r2', r2.toFixed(2));
+            setElText('stats-r', r.toFixed(2));
+            setElText('reg-b0', intercept.toFixed(2));
+            setElText('reg-b1', slope.toFixed(4));
+            
+            let dropAmount = isNaN(slope) ? 0 : Math.abs(slope * 100);
+            setElText('reg-drop', dropAmount.toFixed(2));
+
             let regOptions = {
-                series: [{ name: "Casos", data: scatterData }],
-                chart: { type: 'scatter', height: 250, toolbar: { show: false } },
+                series: [{ name: "Feedback", data: scatterData }],
+                chart: { type: 'scatter', height: 280, toolbar: { show: false }, fontFamily: 'inherit' },
                 xaxis: { title: { text: 'Tamanho da Reclamação (caracteres)' }, tickAmount: 5 },
                 yaxis: { title: { text: 'Nota NPS (0-10)' }, max: 10 },
-                colors: ['#8b5cf6'],
-                grid: { xaxis: { lines: { show: true } } }
+                colors: ['#10b981'],
+                grid: { xaxis: { lines: { show: true } } },
+                annotations: {
+                    // Approximate regression line rendering
+                    points: [{
+                        x: 0, y: intercept,
+                        marker: { size: 0 },
+                        label: { text: 'Intercepto', offsetY: 0 }
+                    }]
+                }
             };
             chartRegression = new ApexCharts(document.querySelector("#chart-regression"), regOptions);
         }
