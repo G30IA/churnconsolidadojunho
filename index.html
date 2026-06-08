@@ -664,16 +664,31 @@
 
         // Variáveis de Gráficos Apex
         let chartReasons, chartProducts, chartImpactBar, chartImpactRadar, chartRegression, chartArima;
+        let currentAuditFilter = 'Todos';
 
         // Inicialização
         document.addEventListener('DOMContentLoaded', () => {
             populateMonthFilter();
+            document.getElementById('monthFilter').addEventListener('change', applyAllFilters);
+            applyAllFilters();
+        });
+
+        function applyAllFilters() {
             renderOverview();
-            renderAuditTable('Todos');
+            renderAuditTable(currentAuditFilter);
             renderImpact();
             renderArima();
             renderSixSigma();
-        });
+        }
+
+        function getFilteredData() {
+            const selectedMonth = document.getElementById('monthFilter').value;
+            if (selectedMonth === 'Todos') return rawData;
+            return rawData.filter(d => {
+                const parts = d.date.split('/');
+                return parts.length === 3 && `${parts[1]}/${parts[2]}` === selectedMonth;
+            });
+        }
 
         // Preencher o filtro de meses automaticamente
         function populateMonthFilter() {
@@ -725,22 +740,23 @@
 
         // --- ABA: VISÃO GERAL ---
         function renderOverview() {
+            const data = getFilteredData();
             // KPIs
-            setElText('kpi-total', rawData.length);
+            setElText('kpi-total', data.length);
             
-            let avgNps = rawData.reduce((acc, curr) => acc + curr.nps, 0) / rawData.length;
+            let avgNps = data.length > 0 ? data.reduce((acc, curr) => acc + curr.nps, 0) / data.length : 0;
             setElText('kpi-nps', avgNps.toFixed(1));
 
             let prodCounts = {};
             let reasonCounts = {};
-            rawData.forEach(d => {
+            data.forEach(d => {
                 prodCounts[d.product] = (prodCounts[d.product] || 0) + 1;
                 let r = d.reason.split(',')[0].trim();
                 reasonCounts[r] = (reasonCounts[r] || 0) + 1;
             });
 
-            let maxProd = Object.keys(prodCounts).reduce((a, b) => prodCounts[a] > prodCounts[b] ? a : b);
-            let maxReason = Object.keys(reasonCounts).reduce((a, b) => reasonCounts[a] > reasonCounts[b] ? a : b);
+            let maxProd = Object.keys(prodCounts).length > 0 ? Object.keys(prodCounts).reduce((a, b) => prodCounts[a] > prodCounts[b] ? a : b) : '-';
+            let maxReason = Object.keys(reasonCounts).length > 0 ? Object.keys(reasonCounts).reduce((a, b) => reasonCounts[a] > reasonCounts[b] ? a : b) : '-';
             
             setElText('kpi-product', maxProd);
             setElText('kpi-reason', maxReason);
@@ -757,6 +773,7 @@
                 dataLabels: { enabled: true },
                 xaxis: { categories: reasonsSorted.map(x => x[0]) }
             };
+            if(chartReasons) chartReasons.destroy();
             chartReasons = new ApexCharts(document.querySelector("#chart-reasons"), rOptions);
             chartReasons.render();
 
@@ -769,22 +786,33 @@
                 dataLabels: { enabled: true, formatter: function (val) { return val.toFixed(1) + "%" } },
                 legend: { position: 'bottom' }
             };
+            if(chartProducts) chartProducts.destroy();
             chartProducts = new ApexCharts(document.querySelector("#chart-products"), pOptions);
             chartProducts.render();
         }
 
         // --- ABA: AUDITORIA ---
         function renderAuditTable(filter) {
+            currentAuditFilter = filter;
             let tbody = document.getElementById('audit-table-body');
             tbody.innerHTML = '';
             
-            let filtered = auditState;
-            if(filter !== 'Todos') {
-                filtered = auditState.filter(a => a.status === filter);
+            const selectedMonth = document.getElementById('monthFilter').value;
+            let monthFilteredState = auditState;
+            if (selectedMonth !== 'Todos') {
+                monthFilteredState = auditState.filter(d => {
+                    const parts = d.date.split('/');
+                    return parts.length === 3 && `${parts[1]}/${parts[2]}` === selectedMonth;
+                });
             }
 
-            let auditados = auditState.filter(a => a.status === 'Auditado').length;
-            setElText('audit-counter', `${auditados} de ${auditState.length} Auditados`);
+            let filtered = monthFilteredState;
+            if(filter !== 'Todos') {
+                filtered = monthFilteredState.filter(a => a.status === filter);
+            }
+
+            let auditados = monthFilteredState.filter(a => a.status === 'Auditado').length;
+            setElText('audit-counter', `${auditados} de ${monthFilteredState.length} Auditados`);
 
             filtered.forEach(item => {
                 let statusBadge = item.status === 'Auditado' 
@@ -916,15 +944,16 @@
         }
 
         function renderImpact() {
-            let carchatData = rawData.filter(d => d.product.includes('Carchat'));
-            let nonCarchatData = rawData.filter(d => !d.product.includes('Carchat'));
+            const data = getFilteredData();
+            let carchatData = data.filter(d => d.product.includes('Carchat'));
+            let nonCarchatData = data.filter(d => !d.product.includes('Carchat'));
 
-            let combos = rawData.filter(d => d.product.includes('G30') && d.product.includes('Carchat'));
-            let totalG30 = rawData.filter(d => d.product.includes('G30')).length;
-            let totalLions = rawData.filter(d => d.product.includes('Lions')).length;
+            let combos = data.filter(d => d.product.includes('G30') && d.product.includes('Carchat'));
+            let totalG30 = data.filter(d => d.product.includes('G30')).length;
+            let totalLions = data.filter(d => d.product.includes('Lions')).length;
 
             let comboG30 = combos.length;
-            let comboLions = rawData.filter(d => d.product.includes('Lions') && d.product.includes('Carchat')).length;
+            let comboLions = data.filter(d => d.product.includes('Lions') && d.product.includes('Carchat')).length;
 
             setElText('impact-combos', combos.length);
             setElText('impact-g30', comboG30);
@@ -947,10 +976,12 @@
                 chart: { type: 'bar', height: 250, stacked: true, toolbar: {show:false}, fontFamily: 'inherit' },
                 plotOptions: { bar: { horizontal: true } },
                 colors: ['#94a3b8', '#ef4444'],
-                xaxis: { categories: ['Volume Total Q1/Q2'] },
+                xaxis: { categories: ['Volume Total'] },
                 fill: { opacity: 1 }
             };
+            if(chartImpactBar) chartImpactBar.destroy();
             chartImpactBar = new ApexCharts(document.querySelector("#chart-impact-bar"), bOptions);
+            chartImpactBar.render();
             
             // Gráfico Radar Vulnerabilidade (Agora Dinâmico)
             let radarCarchat = calculateRadarSeries(carchatData);
@@ -978,7 +1009,9 @@
                 markers: { size: 4, hover: { size: 6 } },
                 yaxis: { show: false }
             };
+            if(chartImpactRadar) chartImpactRadar.destroy();
             chartImpactRadar = new ApexCharts(document.querySelector("#chart-impact-radar"), rdOptions);
+            chartImpactRadar.render();
         }
 
         // --- ABA: ARIMA ---
@@ -1040,13 +1073,14 @@
 
         // --- ABA: SIX SIGMA ---
         function renderSixSigma() {
+            const data = getFilteredData();
             // Helper Maths
             const getMean = arr => arr.reduce((a, b) => a + b, 0) / (arr.length || 1);
             const getVariance = (arr, mean) => arr.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (arr.length - 1 || 1);
 
             // 1. DPMO & Sigma Level (Mock base = Churn * 4.5)
-            let defects = rawData.length;
-            let baseAtiva = Math.round(defects * 4.5);
+            let defects = data.length;
+            let baseAtiva = Math.round(defects * 4.5) || 1; // Prevent division by zero
             let dpmo = (defects / baseAtiva) * 1000000;
             // Aproximação do Z-Score para o Yield
             let yield_val = 1 - (defects / baseAtiva);
@@ -1058,15 +1092,15 @@
             setElText('sigma-base', baseAtiva);
             setElText('sigma-churn', defects);
             setElText('sigma-dpmo', Math.round(dpmo).toLocaleString('pt-PT'));
-            setElText('sigma-level', sigmaLevel);
+            setElText('sigma-level', isNaN(sigmaLevel) ? '0.0' : sigmaLevel);
             const sigmaLevelEl = document.getElementById('sigma-level');
             if(sigmaLevelEl) {
                 sigmaLevelEl.className = `text-3xl font-black stat-value ${sigmaLevel >= 4 ? 'text-green-400' : 'text-red-400'}`;
             }
 
             // Contágio Condicional
-            let g30Total = rawData.filter(d => d.product.includes('G30') && !d.reason.includes('Falência')).length;
-            let comboCanc = rawData.filter(d => d.product.includes('G30') && d.product.includes('Carchat') && !d.reason.includes('Falência')).length;
+            let g30Total = data.filter(d => d.product.includes('G30') && !d.reason.includes('Falência')).length;
+            let comboCanc = data.filter(d => d.product.includes('G30') && d.product.includes('Carchat') && !d.reason.includes('Falência')).length;
 
             setElText('math-g30-total', g30Total);
             setElText('math-combo-total', comboCanc);
@@ -1078,8 +1112,8 @@
             setElText('math-result-text', prob + '%');
 
             // 2. Teste T de Welch
-            let npsYes = rawData.filter(d => d.product.includes('Carchat')).map(d => d.nps);
-            let npsNo = rawData.filter(d => !d.product.includes('Carchat')).map(d => d.nps).concat(g30HistData.map(d=>d.nps));
+            let npsYes = data.filter(d => d.product.includes('Carchat')).map(d => d.nps);
+            let npsNo = data.filter(d => !d.product.includes('Carchat')).map(d => d.nps).concat(g30HistData.map(d=>d.nps));
             
             let meanYes = getMean(npsYes);
             let varYes = getVariance(npsYes, meanYes);
@@ -1091,17 +1125,17 @@
 
             // Estatística T
             let tDen = Math.sqrt((varNo/nNo) + (varYes/nYes));
-            let tStat = tDen === 0 ? 0 : (meanNo - meanYes) / tDen;
+            let tStat = tDen === 0 || isNaN(tDen) ? 0 : (meanNo - meanYes) / tDen;
             
             // Graus de liberdade (Welch-Satterthwaite)
             let dfNum = Math.pow((varNo/nNo) + (varYes/nYes), 2);
             let dfDen = Math.pow(varNo/nNo, 2)/(nNo-1) + Math.pow(varYes/nYes, 2)/(nYes-1);
-            let df = dfDen === 0 ? 1 : Math.floor(dfNum / dfDen);
+            let df = dfDen === 0 || isNaN(dfDen) ? 1 : Math.floor(dfNum / dfDen);
 
             setElText('stat-var1', varNo.toFixed(2));
             setElText('stat-var2', varYes.toFixed(2));
             setElText('stat-t', tStat.toFixed(2));
-            setElText('stat-df', df);
+            setElText('stat-df', df || 0);
             setElText('stat-n1', nNo);
             setElText('stat-n2', nYes);
 
@@ -1109,7 +1143,7 @@
             setElText('stats-mean-yes', meanYes.toFixed(1));
 
             // 3. Regressão Linear Simples (OLS)
-            let scatterData = rawData.filter(d=> d.feedback.length > 5).map(d => [d.feedback.length, d.nps]);
+            let scatterData = data.filter(d=> d.feedback.length > 5).map(d => [d.feedback.length, d.nps]);
             let n = scatterData.length;
             
             let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
@@ -1121,7 +1155,7 @@
             let slopeDenom = (n * sumX2 - sumX * sumX);
             let slope = slopeDenom === 0 ? 0 : (n * sumXY - sumX * sumY) / slopeDenom;
             // Beta 0 (Intercept)
-            let intercept = isNaN(slope) ? 0 : (sumY - slope * sumX) / n;
+            let intercept = isNaN(slope) || !isFinite(slope) ? 0 : (sumY - slope * sumX) / n;
 
             // Pearson r
             let rNum = (n * sumXY - sumX * sumY);
@@ -1132,7 +1166,7 @@
             setElText('stats-r2', r2.toFixed(2));
             setElText('stats-r', r.toFixed(2));
             setElText('reg-b0', intercept.toFixed(2));
-            setElText('reg-b1', slope.toFixed(4));
+            setElText('reg-b1', isNaN(slope) ? '0.0000' : slope.toFixed(4));
             
             let dropAmount = isNaN(slope) ? 0 : Math.abs(slope * 100);
             setElText('reg-drop', dropAmount.toFixed(2));
@@ -1153,7 +1187,9 @@
                     }]
                 }
             };
+            if(chartRegression) chartRegression.destroy();
             chartRegression = new ApexCharts(document.querySelector("#chart-regression"), regOptions);
+            chartRegression.render();
         }
 
         // Modais Auxiliares
