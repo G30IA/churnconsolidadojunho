@@ -21,8 +21,9 @@
         .modal.active { display: flex; }
         
         /* Math typesetting styling */
-        .math-block { font-family: 'Courier New', Courier, monospace; background: #f8fafc; padding: 10px; border-left: 4px solid #3b82f6; border-radius: 4px; }
+        .math-block { font-family: 'Courier New', Courier, monospace; background: #f8fafc; padding: 15px; border-left: 4px solid #10b981; border-radius: 4px; }
         .stat-value { font-family: 'Courier New', Courier, monospace; letter-spacing: -0.05em; }
+        .math-eq { font-family: 'Courier New', Courier, monospace; background-color: #f1f5f9; padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid #e2e8f0; color: #1e293b; letter-spacing: 0.05em;}
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen font-sans text-slate-800 p-4 md:p-8">
@@ -191,12 +192,12 @@
                         <div id="chart-impact-bar" class="h-64"></div>
                     </div>
                     <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200">
-                        <h3 class="text-md font-bold text-slate-700 mb-6 flex justify-between items-center">
+                        <h3 class="text-md font-bold text-slate-700 flex justify-between items-center">
                             Radar de Vulnerabilidade (Causalidades)
                             <i data-lucide="radar" class="w-5 h-5 text-slate-400"></i>
                         </h3>
-                        <div id="chart-impact-radar" class="h-[420px] w-full flex justify-center items-center"></div>
-                        <p class="text-[10px] text-center text-slate-500 mt-2">Distribuição % de queixas extraídas via NLP dos feedbacks reais.</p>
+                        <p class="text-xs text-slate-500 mb-4">Distribuição % de queixas extraídas via NLP dos feedbacks reais.</p>
+                        <div id="chart-impact-radar" class="h-[480px] w-full flex justify-center items-center"></div>
                     </div>
                 </div>
             </div>
@@ -347,13 +348,13 @@
                         Avaliamos o rácio de frustração correlacionando a <strong>Extensão da Reclamação (X)</strong> com a <strong>Nota de NPS (Y)</strong>. O modelo OLS (Ordinary Least Squares) permite prever a degradação da satisfação com base no volume descritivo do churn.
                     </p>
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div class="lg:col-span-2 bg-slate-50 border border-slate-200 p-2 rounded-xl">
-                            <div id="chart-regression" class="h-72 w-full"></div>
+                        <div class="lg:col-span-2 bg-white border border-slate-200 p-2 rounded-xl shadow-sm">
+                            <div id="chart-regression" class="h-80 w-full"></div>
                         </div>
                         <div class="flex flex-col justify-center gap-4">
                             <div class="math-block text-center border-l-0 border-t-4 border-emerald-500">
-                                <p class="text-xs text-slate-500 mb-2 uppercase font-bold">Equação da Reta Inferida</p>
-                                <p class="text-xl font-black text-slate-800">Ŷ = <span id="reg-b0"></span> + (<span id="reg-b1"></span>)X</p>
+                                <p class="text-xs text-slate-500 mb-2 uppercase font-bold tracking-widest">Equação da Reta Inferida</p>
+                                <p class="math-eq text-2xl font-black">$\hat{Y} = <span id="reg-b0"></span> + (<span id="reg-b1"></span>)X$</p>
                             </div>
                             <div class="grid grid-cols-2 gap-4">
                                 <div class="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
@@ -648,7 +649,28 @@
             { id: 128, cnpj: '851179146000187', date: '28/05/2026', store: 'K2 MULTIMARCAS', product: 'Programa G30, Carchat', reason: 'Não consegui organizar o tempo para participar do método', nps: 8, feedback: 'NAO TEMOS SO ESTA EMPRESA, TEMOS OUTROS RAMOS TAMBEM, ENTAO NOSSO TEMPO É CURTO POR ISSO NAO CONSEGUIMOS ALINHAR PARA PODER FAZER O ACOMPANHAMENTO NECESSARIO, SAO MUITAS REUNIOES MENSAIS VIDEOS PRA ACOMPANHAR PALESTRAS ETC. E NÃO CONSIGO PARAR MUITO MENOS PARAR A EQUIPE PRA FAZER ESSE ACOMPANHAMENTO.' },
             { id: 129, cnpj: '243369352000121', date: '28/05/2026', store: 'Jm veículos', product: 'Programa G30, Carchat', reason: 'Falta de alinhamento de expectativas, Não me senti acompanhado', nps: 2, feedback: 'Cancelar o carchat por motivos de não está funcionando\nAo procurar suporte informaram que o problema era o nosso crm mas o crm nos notificou que não estava com problemas\nEnfim\nMesmo avisando o suporte não foi refeito então desde o dia contratado praticamente não usamos\nE quando foi ativo estava com erro e enviando fotos de carros de outras lojas para nossos clientes' },
             { id: 130, cnpj: '619002116000198', date: '29/05/2026', store: 'pallotti veiculos', product: 'Carchat', reason: 'Falta de alinhamento de expectativas', nps: 6, feedback: 'não conseguimos alinhar como que precisamo, temos que ficar fiscalinazando o tempo todo a ferramenta e depois dos ajustes passado algum vota nos mesmo erros e não dispomos do tempo necessário para essa correção quase que diária' },
-            { id: 131, cnpj: '415345376000105', date: '29/05/2026', store: 'Facecar veículos', product: 'Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas', nps: 4, feedback: 'Não tive um bom suporte a ferramenta não funciona como apresentado\nNão integrava com Instagram e Facebook\nPropaganda enganosa' }
+            { id: 131, cnpj: '415345376000105', date: '29/05/2026', store: 'Facecar veículos', product: 'Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas', nps: 4, feedback: 'Não tive um bom suporte a ferramenta não funciona como apresentado\nNão integrava com Instagram e Facebook\nPropaganda enganosa' },
+            { id: 132, cnpj: '45536762000145', date: '30/05/2026', store: 'DIOGO AUTOMOVEIS LTDA', product: 'Lions Car Club, Programa G30, Carchat', reason: 'O produto não era o que eu esperava', nps: 9, feedback: 'PROGRAMA G30/LIONS PERMANEÇO, SÓ ESTOU CANCELANDO O CARCHAT.' },
+            { id: 133, cnpj: '36349531000131', date: '01/06/2026', store: 'Forza Motors', product: 'Programa G30', reason: 'Não consegui aplicar por falta de equipe, Não consegui organizar o tempo para participar do método', nps: 9, feedback: 'Falta de equipe, estrutura muito enxuta para podermos colocar em pratica todo o método' },
+            { id: 134, cnpj: '33296657000105', date: '02/06/2026', store: 's.a veiculos ltda', product: 'Programa G30, Carchat', reason: 'Falta de alinhamento de expectativas', nps: 6, feedback: 'O produto não era o que eu esperava' },
+            { id: 135, cnpj: '60016598000139', date: '02/06/2026', store: 'Titanium Motors', product: 'Programa G30, Carchat', reason: 'Falência ou dissolução do negócio', nps: 7, feedback: 'Encerramento das atividades' },
+            { id: 136, cnpj: '55495061000169', date: '02/06/2026', store: 'Demp Motors', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas', nps: 5, feedback: 'Não cancelamos o programa G30' },
+            { id: 137, cnpj: '05819235000123', date: '02/06/2026', store: 'autoshop multimarcas', product: 'Programa G30', reason: 'Não consegui aplicar por falta de equipe, Não consegui organizar o tempo para participar do método', nps: 7, feedback: 'sem motivo. apenas cancelar' },
+            { id: 138, cnpj: '23624994000112', date: '03/06/2026', store: 'John veículos', product: 'Carchat', reason: 'Não consegui aplicar por falta de equipe, Não consegui organizar o tempo para participar do método, Problemas familiares', nps: 8, feedback: 'Econômicos' },
+            { id: 139, cnpj: '01407152000176', date: '03/06/2026', store: '3JM veiculos LTDA', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava, Não me senti acompanhado', nps: 4, feedback: 'Pois vi que não é o que eu esperava!' },
+            { id: 140, cnpj: '29133210000130', date: '03/06/2026', store: 'IA VEICULOS', product: 'Programa G30, Carchat', reason: 'Falta de alinhamento de expectativas, Dificuldades financeiras', nps: 7, feedback: `Decidi cancelar o Programa em razão das dificuldades financeiras enfrentadas atualmente pela empresa, o que exige a redução de custos e a reavaliação de investimentos e contratos em andamento.\nAlém disso, durante o período de utilização, o Programa não atendeu às expectativas e necessidades da empresa da forma esperada. No evento do Feirão, por exemplo, não recebemos o material de apoio que havia sido prometido, o que prejudicou as ações planejadas. Também não obtivemos êxito na implementação e no cadastro da nova Carchat, uma vez que o cadastro não foi concluído e, consequentemente, nunca tivemos acesso à plataforma para utilização dos recursos e serviços oferecidos.\nDiante desses fatores, somados à necessidade de contenção de despesas e à percepção de que o Programa não entregou o suporte e os benefícios esperados, optamos pelo seu cancelamento.` },
+            { id: 141, cnpj: '22227622000190', date: '05/06/2026', store: 'Dm veículos bh', product: 'Carchat', reason: 'O produto não era o que eu esperava', nps: 0, feedback: `Venho registrar minha insatisfação com o produto G30 CarChat e com o atendimento prestado pelo vendedor Anderson.\n\nNo momento da contratação, fui levado a acreditar que estava adquirindo uma ferramenta pronta para uso e que agregaria valor ao meu negócio. No entanto, após a compra, constatei que diversas funcionalidades não estavam operacionais ou sequer estavam finalizadas.\n\nSempre que entrei em contato para esclarecer dúvidas ou buscar suporte, recebi respostas vagas e a justificativa de que o sistema estava em manutenção ou passando por ajustes. Essa situação se repetiu por um longo período, sem uma solução efetiva.\n\nAlém disso, o vendedor não conseguiu esclarecer adequadamente minhas dúvidas técnicas e comerciais, o que aumentou minha sensação de ter sido induzido a contratar um produto diferente da realidade apresentada.\n\nComo consequência, não consegui utilizar o serviço contratado e não obtive qualquer benefício que justificasse o investimento realizado.\n\nDiante disso, solicito o reembolso integral do valor pago, no montante de R$ 1.500,00, uma vez que o produto não atendeu às condições apresentadas no momento da venda e permaneceu indisponível para uso durante o período contratado.\n\nEspero uma solução amigável e rápida para este problema` },
+            { id: 142, cnpj: '39762730000184', date: '08/06/2026', store: 'GTS veículos', product: 'Carchat', reason: 'O produto não era o que eu esperava', nps: 5, feedback: 'Dificultou a gestão de leads no meu crm' },
+            { id: 143, cnpj: '30999675000157', date: '09/06/2026', store: 'R7 MOTORS COMERCIO DE VEICULOS LTDA', product: 'Carchat', reason: 'Não consegui aplicar por falta de equipe', nps: 9, feedback: 'POR FALTA DE EQUIPE' },
+            { id: 144, cnpj: '56320151000181', date: '09/06/2026', store: 'Lc veiculos', product: 'Programa G30', reason: 'O produto não era o que eu esperava', nps: 1, feedback: 'não era o que esperava' },
+            { id: 145, cnpj: '27291516000199', date: '11/06/2026', store: 'ROSSI AUTOMOTIVE', product: 'Carchat', reason: 'O produto não era o que eu esperava', nps: 6, feedback: 'VOU CANCELAR O TRAFEGO PAGO E NÃO VOU TER LEED SUFICIENTE' },
+            { id: 146, cnpj: '48879570000120', date: '11/06/2026', store: 'Azevedo Viglioni Motors (Cansadão Automoveis)', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava, Não me senti acompanhado', nps: 7, feedback: 'Não estou cancelando o Programa G30. Apenas a Carchat. Após utilizar a IA, percebi que o funcionamento da mesma não atendeu às minhas expectativas. Os comandos e respostas apresentados não foram satisfatórios, em diversos momentos houve respostas incorretas, e além disso o sistema operou apenas por cerca de 7 dias e depois não voltou a funcionar mais.' },
+            { id: 147, cnpj: '53440309000169', date: '11/06/2026', store: 'JG CAR', product: 'Programa G30', reason: 'Não consegui aplicar por falta de equipe, Não consegui organizar o tempo para participar do método, Não apliquei o método por completo e estou insatisfeito com os resultados, Não me senti acompanhado', nps: 8, feedback: 'No caso, eu não vou ter equipe a princípio para dar continuidade no programa! Não estamos tendo tempo para realizar as atividades! Os funcionários trabalham na empresa de carro e de café, e meu pai só quer trabalhar com poucos funcionários! Eu não vou conseguir fazer oque a G30 pede e por isso vai ser difícil ter o sucesso! E nossas vendas estão muito baixa e tá ficando muito gasto, para algo que eu não vou conseguir colocar na cabeça do meu pai para fazer acontecer! Se eu fosse dono sozinho talvez eu conseguiria, mais com meu pai vai ser difícil! Ele mexe com outros ramos, então ele quer mandar mais tem que ser do jeito dele! Com equipe que temos muito difícil conseguir! Eu gostei muito de vocês e da metodologia, mais no momento não vai fazer sentido para mim! Pois vai ficar pesado e não vamos conseguir o ter resultados! E não está dando tempo de ver os vídeos, e também as reuniões estão difícil de marcar com os consultores! Mais eu preferi cancelar pois mesmo com as reuniões vai ser difícil! Pois meu pai tem o jeito dele! No futuro pretendo voltar!' },
+            { id: 148, cnpj: '47035200000143', date: '12/06/2026', store: 'TM MOTORS', product: 'Programa G30, Carchat', reason: 'Não consegui aplicar por falta de equipe, Não consegui organizar o tempo para participar do método', nps: 9, feedback: 'Falta de pessoas' },
+            { id: 149, cnpj: '61526400000120', date: '12/06/2026', store: 'MAXXIMUM VEÍCULOS LTDA', product: 'Programa G30', reason: 'Falência ou dissolução do negócio', nps: 10, feedback: 'Abri a empresa com meu filho, infelizmente ele fez um fraude grande e agora terei que reduzir custos e tentar salvar a empresa.' },
+            { id: 150, cnpj: '52643808000190', date: '12/06/2026', store: 'Tks Veiculos', product: 'Programa G30', reason: 'Não consegui aplicar por falta de equipe, Dificuldades financeiras', nps: 9, feedback: 'Falta de equipe' },
+            { id: 151, cnpj: '65288986000192', date: '15/06/2026', store: 'Sorriso Motors', product: 'Programa G30, Carchat, G30 Pay, Carvoice', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas, Não me senti acompanhado', nps: 5, feedback: 'Pq pra mim não vai fazer sentido' },
+            { id: 152, cnpj: '07168401000102', date: '15/06/2026', store: 'Marcão Veículos', product: 'Programa G30, Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas, Não consegui aplicar por falta de equipe, Não consegui organizar o tempo para participar do método, Não apliquei o método por completo e estou insatisfeito com os resultados', nps: 6, feedback: 'Não estou conseguindo desenvolver o método.' }
         ];
 
         // G30 Histórico (Grupo de Controlo)
@@ -983,7 +1005,7 @@
             chartImpactBar = new ApexCharts(document.querySelector("#chart-impact-bar"), bOptions);
             chartImpactBar.render();
             
-            // Gráfico Radar Vulnerabilidade (Agora Dinâmico)
+            // Gráfico Radar Vulnerabilidade (Agora Dinâmico e Melhorado)
             let radarCarchat = calculateRadarSeries(carchatData);
             let radarSemCarchat = calculateRadarSeries(nonCarchatData);
 
@@ -992,10 +1014,11 @@
                     { name: 'Com Carchat', data: radarCarchat }, 
                     { name: 'Sem Carchat', data: radarSemCarchat }
                 ],
-                chart: { height: 420, type: 'radar', toolbar:{show:false}, fontFamily: 'inherit' },
+                chart: { height: 480, type: 'radar', toolbar:{show:false}, fontFamily: 'inherit' },
                 plotOptions: {
                     radar: {
-                        size: 140,
+                        size: 150,
+                        offsetY: 10,
                         polygons: {
                             strokeColors: '#e2e8f0',
                             connectorColors: '#e2e8f0'
@@ -1174,9 +1197,14 @@
             let regOptions = {
                 series: [{ name: "Feedback", data: scatterData }],
                 chart: { type: 'scatter', height: 280, toolbar: { show: false }, fontFamily: 'inherit' },
-                xaxis: { title: { text: 'Tamanho da Reclamação (caracteres)' }, tickAmount: 5 },
+                xaxis: { 
+                    title: { text: 'Tamanho da Reclamação (caracteres)' }, 
+                    tickAmount: 6,
+                    labels: { formatter: function(val) { return Math.round(val); } }
+                },
                 yaxis: { title: { text: 'Nota NPS (0-10)' }, max: 10 },
                 colors: ['#10b981'],
+                markers: { size: 6, strokeWidth: 1, strokeColors: '#fff', fillOpacity: 0.8 },
                 grid: { xaxis: { lines: { show: true } } },
                 annotations: {
                     // Approximate regression line rendering
