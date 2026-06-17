@@ -1,11 +1,25 @@
 <!DOCTYPE html>
-<html lang="pt-pt">
+<html lang="pt-pt" class="antialiased">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Central de Inteligência de Churn | Six Sigma</title>
+    <!-- Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', "Liberation Mono", "Courier New", 'monospace'] },
+                    colors: { brand: { 50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6', 600: '#2563eb', 900: '#1e3a8a', 950: '#172554' } }
+                }
+            }
+        }
+    </script>
     <!-- ApexCharts -->
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <!-- PapaParse para importação de CSV -->
@@ -13,393 +27,475 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        .sidebar-list::-webkit-scrollbar { width: 4px; }
-        .sidebar-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .modal { display: none; }
-        .modal.active { display: flex; }
+        body { background-color: #0f172a; color: #0f172a; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
         
-        /* Math typesetting styling */
-        .math-block { font-family: 'Courier New', Courier, monospace; background: #f8fafc; padding: 15px; border-left: 4px solid #10b981; border-radius: 4px; }
-        .stat-value { font-family: 'Courier New', Courier, monospace; letter-spacing: -0.05em; }
-        .math-eq { font-family: 'Courier New', Courier, monospace; background-color: #f1f5f9; padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid #e2e8f0; color: #1e293b; letter-spacing: 0.05em;}
+        .tab-content { display: none; opacity: 0; transform: translateY(10px); transition: all 0.4s ease; }
+        .tab-content.active { display: block; opacity: 1; transform: translateY(0); }
+        .modal { display: none; opacity: 0; transition: opacity 0.3s ease; }
+        .modal.active { display: flex; opacity: 1; }
+        
+        /* Glassmorphism para Dark Mode */
+        .glass { background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-bottom: 1px solid rgba(255,255,255,0.08); box-shadow: 0 4px 30px rgba(0,0,0,0.2); }
+        
+        /* Elegant Shadows & Cards flutuantes */
+        .card-premium { background: rgba(255, 255, 255, 0.98); border-radius: 1rem; box-shadow: 0 20px 40px -15px rgba(0,0,0,0.5); border: 1px solid rgba(255, 255, 255, 0.15); transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .card-premium:hover { box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6); }
+
+        /* Typography Math */
+        .math-block { background: #f8fafc; padding: 1.25rem; border-left: 4px solid #10b981; border-radius: 0.5rem; }
+        .stat-value { letter-spacing: -0.05em; font-feature-settings: "tnum" on, "lnum" on; }
+        .math-eq { font-family: 'Courier New', Courier, monospace; background-color: #f1f5f9; padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid #e2e8f0; color: #0f172a; letter-spacing: 0.02em; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);}
+
+        /* ApexCharts Customization */
+        .apexcharts-tooltip { border-radius: 0.5rem !important; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important; border: none !important; font-family: 'Inter', sans-serif !important; }
+        .apexcharts-tooltip-title { background: #f8fafc !important; font-weight: 600 !important; border-bottom: 1px solid #e2e8f0 !important; }
+
+        /* Animated Background LP Style */
+        @keyframes blob {
+            0% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob { animation: blob 15s infinite; }
+        .animation-delay-2000 { animation-delay: 2s; }
+        .animation-delay-4000 { animation-delay: 4s; }
+
+        /* Page Fade-in Initial */
+        @keyframes fadePage {
+            0% { opacity: 0; filter: blur(10px); transform: scale(0.98); }
+            100% { opacity: 1; filter: blur(0); transform: scale(1); }
+        }
+        .animate-page { animation: fadePage 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen font-sans text-slate-800 p-4 md:p-8">
+<body class="min-h-screen flex flex-col relative overflow-x-hidden text-slate-800">
 
-    <div class="max-w-7xl mx-auto">
-        <!-- HEADER -->
-        <header class="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div>
-                <h1 class="text-3xl font-bold text-slate-900 flex items-center gap-2">
-                    <i data-lucide="trending-down" class="text-red-600 w-8 h-8"></i>
-                    Central de Inteligência de Churn
-                </h1>
-                <p class="text-slate-500 mt-1">Análise geral, auditoria de casos, previsão ARIMA e estatística Six Sigma avançada.</p>
-            </div>
-            <div class="flex flex-col sm:flex-row items-center gap-3">
-                <!-- BOTÃO DE IMPORTAÇÃO CSV -->
-                <label for="csv-upload" class="flex items-center gap-2 bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg shadow-sm cursor-pointer transition-colors font-semibold text-sm">
-                    <i data-lucide="upload-cloud" class="w-4 h-4"></i> Importar CSV
-                </label>
-                <input type="file" id="csv-upload" accept=".csv" class="hidden" />
+    <!-- LP Animated Background Elements -->
+    <div class="fixed inset-0 z-0 pointer-events-none w-full h-full overflow-hidden bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-slate-900 via-slate-800 to-slate-950">
+        <div class="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] rounded-full bg-brand-600/30 blur-[120px] animate-blob"></div>
+        <div class="absolute top-[20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-emerald-600/20 blur-[120px] animate-blob animation-delay-2000"></div>
+        <div class="absolute bottom-[-20%] left-[20%] w-[800px] h-[800px] rounded-full bg-purple-600/20 blur-[150px] animate-blob animation-delay-4000"></div>
+    </div>
 
-                <div class="flex items-center gap-2 bg-white p-2 rounded-lg shadow-sm border border-slate-200">
-                    <i data-lucide="calendar" class="text-slate-400 w-5 h-5 ml-2"></i>
-                    <select id="monthFilter" class="bg-transparent border-none text-slate-700 font-medium focus:ring-0 cursor-pointer p-2 outline-none">
-                        <option value="Todos">Visualizar Todos os Meses</option>
-                    </select>
+    <div class="animate-page relative z-10 w-full flex-1 flex flex-col">
+        <!-- HEADER (Sticky Glassmorphism) -->
+        <header class="glass sticky top-0 z-40 w-full px-4 md:px-8 py-4 mb-6">
+            <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="bg-brand-500 p-2.5 rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.5)]">
+                        <i data-lucide="pie-chart" class="text-white w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-extrabold text-white tracking-tight leading-none">
+                            Churn Intelligence
+                        </h1>
+                        <p class="text-xs text-slate-400 font-medium tracking-wide uppercase mt-0.5">Dossiê Executivo & Six Sigma</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <label for="csv-upload" class="flex items-center gap-2 bg-brand-600 hover:bg-brand-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.4)] px-4 py-2 rounded-lg cursor-pointer transition-colors font-semibold text-sm">
+                        <i data-lucide="upload" class="w-4 h-4"></i> Importar CSV
+                    </label>
+                    <input type="file" id="csv-upload" accept=".csv" class="hidden" />
+
+                    <div class="flex items-center gap-2 bg-slate-800/80 px-4 py-2 rounded-lg shadow-sm border border-slate-700 transition-colors focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/50">
+                        <i data-lucide="calendar" class="text-brand-400 w-4 h-4"></i>
+                        <select id="monthFilter" class="bg-transparent border-none text-white font-semibold text-sm focus:ring-0 cursor-pointer outline-none w-36">
+                            <option value="Todos" class="text-slate-900">Visão Acumulada</option>
+                        </select>
+                    </div>
                 </div>
             </div>
         </header>
 
-        <!-- NAVEGAÇÃO POR ABAS -->
-        <nav class="flex space-x-6 border-b border-slate-200 mb-8 px-2 overflow-x-auto">
-            <button onclick="switchTab('overview')" id="tab-overview" class="tab-btn pb-3 px-1 whitespace-nowrap flex items-center gap-2 transition-colors border-b-2 border-red-600 text-red-700 font-semibold">
-                <i data-lucide="activity" class="w-4 h-4"></i> Visão Geral
-            </button>
-            <button onclick="switchTab('audit')" id="tab-audit" class="tab-btn pb-3 px-1 whitespace-nowrap flex items-center gap-2 transition-colors text-slate-500 hover:text-slate-800">
-                <i data-lucide="clipboard-check" class="w-4 h-4"></i> Auditoria de Casos
-            </button>
-            <button onclick="switchTab('impact')" id="tab-impact" class="tab-btn pb-3 px-1 whitespace-nowrap flex items-center gap-2 transition-colors text-slate-500 hover:text-slate-800">
-                <i data-lucide="git-merge" class="w-4 h-4"></i> Análise de Contágio
-            </button>
-            <button onclick="switchTab('arima')" id="tab-arima" class="tab-btn pb-3 px-1 whitespace-nowrap flex items-center gap-2 transition-colors text-slate-500 hover:text-slate-800">
-                <i data-lucide="trending-up" class="w-4 h-4"></i> Previsão ARIMA
-            </button>
-            <button onclick="switchTab('sixsigma')" id="tab-sixsigma" class="tab-btn pb-3 px-1 whitespace-nowrap flex items-center gap-2 transition-colors text-slate-500 hover:text-slate-800">
-                <i data-lucide="microscope" class="w-4 h-4"></i> Dossiê Six Sigma
-            </button>
-        </nav>
+        <div class="max-w-7xl mx-auto w-full px-4 md:px-8 flex-1 pb-12">
+            
+            <!-- NAVEGAÇÃO POR ABAS (Segmented Control Style) -->
+            <nav class="flex p-1.5 bg-slate-800/40 backdrop-blur-md rounded-xl mb-8 w-fit overflow-x-auto border border-slate-700 shadow-xl">
+                <button onclick="switchTab('overview')" id="tab-overview" class="tab-btn px-5 py-2.5 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all bg-white shadow-md text-slate-900">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
+                </button>
+                <button onclick="switchTab('audit')" id="tab-audit" class="tab-btn px-5 py-2.5 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all text-slate-400 hover:text-slate-200">
+                    <i data-lucide="list-checks" class="w-4 h-4"></i> Auditoria de Casos
+                </button>
+                <button onclick="switchTab('impact')" id="tab-impact" class="tab-btn px-5 py-2.5 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all text-slate-400 hover:text-slate-200">
+                    <i data-lucide="network" class="w-4 h-4"></i> Matriz de Contágio
+                </button>
+                <button onclick="switchTab('arima')" id="tab-arima" class="tab-btn px-5 py-2.5 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all text-slate-400 hover:text-slate-200">
+                    <i data-lucide="line-chart" class="w-4 h-4"></i> Previsão ARIMA
+                </button>
+                <button onclick="switchTab('sixsigma')" id="tab-sixsigma" class="tab-btn px-5 py-2.5 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all text-slate-400 hover:text-slate-200">
+                    <i data-lucide="flask-conical" class="w-4 h-4"></i> Dossiê Six Sigma
+                </button>
+            </nav>
 
-        <!-- CONTEÚDO DAS ABAS -->
-        <div id="content-overview" class="tab-content active animate-in fade-in duration-300">
-            <!-- KPIs -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
-                    <div class="p-3 bg-red-100 text-red-600 rounded-lg"><i data-lucide="users" class="w-6 h-6"></i></div>
-                    <div><p class="text-sm text-slate-500 font-medium">Cancelamentos</p><h3 id="kpi-total" class="text-2xl font-bold text-slate-800">0</h3></div>
-                </div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
-                    <div class="p-3 bg-amber-100 text-amber-600 rounded-lg"><i data-lucide="frown" class="w-6 h-6"></i></div>
-                    <div><p class="text-sm text-slate-500 font-medium">NPS Médio</p><h3 id="kpi-nps" class="text-2xl font-bold text-slate-800">0.0</h3></div>
-                </div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
-                    <div class="p-3 bg-blue-100 text-blue-600 rounded-lg"><i data-lucide="car" class="w-6 h-6"></i></div>
-                    <div><p class="text-sm text-slate-500 font-medium">Produto Vilão</p><h3 id="kpi-product" class="text-lg font-bold text-slate-800 truncate">-</h3></div>
-                </div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
-                    <div class="p-3 bg-slate-100 text-slate-600 rounded-lg"><i data-lucide="alert-circle" class="w-6 h-6"></i></div>
-                    <div><p class="text-sm text-slate-500 font-medium">Motivo Principal</p><h3 id="kpi-reason" class="text-sm font-bold text-slate-800 truncate max-w-[150px]" title="">-</h3></div>
-                </div>
-            </div>
-            <!-- GRÁFICOS -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                    <h3 class="text-lg font-semibold mb-4 text-slate-800">Motivos de Cancelamento (Pareto)</h3>
-                    <div id="chart-reasons" class="h-80"></div>
-                </div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                    <h3 class="text-lg font-semibold mb-4 text-slate-800">Distribuição por Produto</h3>
-                    <div id="chart-products" class="h-80"></div>
-                </div>
-            </div>
-        </div>
-
-        <div id="content-audit" class="tab-content animate-in fade-in duration-300">
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="p-4 border-b border-slate-200 bg-slate-50 flex flex-col gap-4">
-                    <div class="flex justify-between items-center">
-                        <h3 class="font-semibold text-slate-700 flex items-center gap-2">
-                            <i data-lucide="file-text" class="w-5 h-5 text-slate-500"></i> Auditoria de Casos
-                        </h3>
-                        <span id="audit-counter" class="text-sm bg-slate-200 text-slate-700 px-3 py-1 rounded-full font-medium">0 de 0 Auditados</span>
-                    </div>
-                    <div id="auditFilters" class="flex flex-wrap gap-2 items-center text-sm">
-                        <span class="font-semibold text-slate-600">Filtrar por Status:</span>
-                        <button onclick="filterAudit('Todos', event)" class="filter-btn px-3 py-1 bg-slate-800 text-white rounded-full font-bold">Todos</button>
-                        <button onclick="filterAudit('Pendente', event)" class="filter-btn px-3 py-1 bg-white border border-slate-300 rounded-full font-bold hover:bg-slate-100 transition">Pendente</button>
-                        <button onclick="filterAudit('Auditado', event)" class="filter-btn px-3 py-1 bg-white border border-slate-300 rounded-full font-bold hover:bg-slate-100 transition">Auditado</button>
-                    </div>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left">
-                        <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
-                            <tr>
-                                <th class="p-4">Status</th>
-                                <th class="p-4">Data</th>
-                                <th class="p-4">Loja & CNPJ</th>
-                                <th class="p-4">Produto / Motivo</th>
-                                <th class="p-4 text-center">Acção</th>
-                            </tr>
-                        </thead>
-                        <tbody id="audit-table-body" class="text-sm">
-                            <!-- Inserido via JS -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <div id="content-impact" class="tab-content animate-in fade-in duration-300">
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <div class="flex items-center justify-between mb-6">
-                    <div>
-                        <h2 class="text-xl font-bold text-slate-800 mb-2 flex items-center gap-2">
-                            <i data-lucide="zap" class="text-yellow-500 fill-yellow-500 w-6 h-6"></i> Engenharia de Contágio (Deep Analysis)
-                        </h2>
-                        <p class="text-slate-500 text-sm">Identificando o "Paciente Zero" na matriz de produtos através do Radar de Vulnerabilidades.</p>
-                    </div>
-                    <div class="bg-red-50 px-4 py-2 rounded-lg text-red-700 text-center shadow-inner border border-red-200">
-                        <p class="text-[10px] font-bold uppercase tracking-tighter">Splash Score P(G30|Carchat)</p>
-                        <p id="splash-score" class="text-2xl font-black">0%</p>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                        <p class="text-xs font-bold text-slate-400 uppercase mb-1">Volume de Combos Canc.</p>
-                        <h4 id="impact-combos" class="text-2xl font-bold text-slate-700">0</h4>
-                    </div>
-                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                        <p class="text-xs font-bold text-blue-400 uppercase mb-1">Contágio G30</p>
-                        <h4 class="text-2xl font-bold text-blue-700 flex items-baseline gap-1">
-                            <span id="impact-g30">0</span>
-                            <span id="impact-g30-perc" class="text-sm opacity-80">(0%)</span>
-                        </h4>
-                        <p class="text-[10px] text-blue-600 mt-1">Dos cancelamentos totais de G30.</p>
-                    </div>
-                    <div class="bg-purple-50 p-4 rounded-xl border border-purple-100">
-                        <p class="text-xs font-bold text-purple-400 uppercase mb-1">Contágio Lions</p>
-                        <h4 class="text-2xl font-bold text-purple-700 flex items-baseline gap-1">
-                            <span id="impact-lions">0</span>
-                            <span id="impact-lions-perc" class="text-sm opacity-80">(0%)</span>
-                        </h4>
-                        <p class="text-[10px] text-purple-600 mt-1">Dos cancelamentos totais de Lions.</p>
-                    </div>
-                    <div class="bg-orange-50 p-4 rounded-xl border border-orange-200">
-                        <p class="text-xs font-bold text-orange-600 uppercase mb-1">NPS Delta</p>
-                        <h4 id="impact-nps-delta" class="text-2xl font-bold text-orange-700">-</h4>
-                        <p class="text-[10px] text-orange-600 mt-1">Impacto isolado do combo.</p>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200">
-                        <h3 class="text-md font-bold text-slate-700 mb-6 flex justify-between items-center">
-                            Atribuição de Causalidade
-                            <i data-lucide="bar-chart-2" class="w-5 h-5 text-slate-400"></i>
-                        </h3>
-                        <div id="chart-impact-bar" class="h-64"></div>
-                    </div>
-                    <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200">
-                        <h3 class="text-md font-bold text-slate-700 flex justify-between items-center">
-                            Radar de Vulnerabilidade (Causalidades)
-                            <i data-lucide="radar" class="w-5 h-5 text-slate-400"></i>
-                        </h3>
-                        <p class="text-xs text-slate-500 mb-4">Distribuição % de queixas extraídas via NLP dos feedbacks reais.</p>
-                        <div id="chart-impact-radar" class="h-[480px] w-full flex justify-center items-center"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="content-arima" class="tab-content animate-in fade-in duration-300">
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                    <div>
-                        <h2 class="text-xl font-bold text-slate-800 mb-1 flex items-center gap-2"><i data-lucide="cpu" class="text-slate-600 w-6 h-6"></i> Projeção de Churn (Modelo ARIMA Simulado)</h2>
-                        <p class="text-slate-500 text-sm">A <strong>Linha Vermelha</strong> é a inércia atual. A <strong>Verde</strong> estima a redução por retenção e congelamento de cross-sell.</p>
-                    </div>
-                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 flex flex-col gap-2 max-w-sm">
-                        <div class="flex justify-between items-center text-slate-800">
-                            <span class="text-xs font-bold uppercase">Churn Incontrolável (Falências)</span>
-                            <span id="uncontrollable-perc" class="font-black text-lg">0%</span>
+            <!-- CONTEÚDO DAS ABAS -->
+            
+            <!-- ABA: VISÃO GERAL -->
+            <div id="content-overview" class="tab-content active">
+                <!-- KPIs com Sparklines -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="card-premium p-5 flex flex-col justify-between relative overflow-hidden group">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Volume de Churn</p>
+                                <h3 id="kpi-total" class="text-3xl font-extrabold text-slate-900 mt-1 stat-value" data-val="0">0</h3>
+                            </div>
+                            <div class="p-2 bg-rose-50 text-rose-500 rounded-lg group-hover:bg-rose-500 group-hover:text-white transition-colors"><i data-lucide="users" class="w-5 h-5"></i></div>
                         </div>
-                        <label class="flex items-center gap-2 mt-1 cursor-pointer bg-white p-1.5 rounded border border-slate-200 shadow-sm">
-                            <input type="checkbox" id="excludeUncontrollable" onchange="updateArima()" class="w-4 h-4 text-slate-600 rounded border-slate-300 focus:ring-slate-500">
-                            <span class="text-xs font-semibold text-slate-700">Excluir Incontroláveis da Previsão</span>
-                        </label>
+                        <div id="spark1" class="absolute bottom-0 left-0 right-0 opacity-50"></div>
+                    </div>
+                    
+                    <div class="card-premium p-5 flex flex-col justify-between relative overflow-hidden group">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">NPS Global</p>
+                                <h3 id="kpi-nps" class="text-3xl font-extrabold text-slate-900 mt-1 stat-value" data-val="0.0">0.0</h3>
+                            </div>
+                            <div class="p-2 bg-amber-50 text-amber-500 rounded-lg group-hover:bg-amber-500 group-hover:text-white transition-colors"><i data-lucide="smile" class="w-5 h-5"></i></div>
+                        </div>
+                        <div id="spark2" class="absolute bottom-0 left-0 right-0 opacity-50"></div>
+                    </div>
+
+                    <div class="card-premium p-5 flex flex-col justify-between relative overflow-hidden group">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Ofensor Principal</p>
+                                <h3 id="kpi-product" class="text-xl font-bold text-brand-600 mt-1 truncate leading-tight">-</h3>
+                            </div>
+                            <div class="p-2 bg-brand-50 text-brand-600 rounded-lg group-hover:bg-brand-600 group-hover:text-white transition-colors"><i data-lucide="package" class="w-5 h-5"></i></div>
+                        </div>
+                        <div class="mt-4 flex items-center text-xs text-slate-500 font-medium">
+                            <span class="w-2 h-2 rounded-full bg-brand-500 mr-2 animate-pulse"></span> Análise Sistémica
+                        </div>
+                    </div>
+
+                    <div class="card-premium p-5 flex flex-col justify-between relative overflow-hidden group">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="w-full">
+                                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Motivo Crítico</p>
+                                <h3 id="kpi-reason" class="text-sm font-bold text-slate-800 mt-1 line-clamp-2 leading-snug" title="">-</h3>
+                            </div>
+                            <div class="p-2 bg-slate-100 text-slate-500 rounded-lg ml-2 group-hover:bg-slate-700 group-hover:text-white transition-colors"><i data-lucide="alert-triangle" class="w-5 h-5"></i></div>
+                        </div>
+                        <div class="mt-4 flex items-center text-xs text-slate-500 font-medium">
+                            Extraído via NLP 
+                        </div>
                     </div>
                 </div>
-                <div id="chart-arima" class="h-96 w-full mb-8"></div>
-                <div class="border-t border-slate-200 pt-6">
-                    <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2"><i data-lucide="trending-up" class="text-green-600 h-5 w-5"></i> Detalhamento Mensal (Próximo Trimestre)</h3>
-                    <div id="arima-monthly-details" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                <!-- GRÁFICOS -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <div class="card-premium p-6">
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500 mb-6 flex items-center gap-2">
+                            <i data-lucide="bar-chart-3" class="w-4 h-4 text-brand-500"></i> Diagrama de Pareto (Motivos)
+                        </h3>
+                        <div id="chart-reasons" class="h-80 w-full"></div>
+                    </div>
+                    <div class="card-premium p-6">
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500 mb-6 flex items-center gap-2">
+                            <i data-lucide="donut" class="w-4 h-4 text-brand-500"></i> Distribuição por Produto
+                        </h3>
+                        <div id="chart-products" class="h-80 w-full flex justify-center items-center"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA: AUDITORIA -->
+            <div id="content-audit" class="tab-content">
+                <div class="card-premium overflow-hidden border-0">
+                    <div class="p-5 border-b border-slate-100 bg-white flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-slate-100 rounded-lg text-slate-600"><i data-lucide="file-search" class="w-5 h-5"></i></div>
+                            <div>
+                                <h3 class="font-bold text-slate-800">Log de Auditoria de Casos</h3>
+                                <p class="text-xs text-slate-500 font-medium mt-0.5">Inspeção detalhada de feedbacks e atribuição de falhas.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-wrap gap-2 items-center text-sm bg-slate-50 p-1.5 rounded-lg border border-slate-200">
+                            <button onclick="filterAudit('Todos', event)" class="filter-btn px-4 py-1.5 bg-white shadow-sm text-slate-800 rounded-md font-semibold transition-all">Todos</button>
+                            <button onclick="filterAudit('Pendente', event)" class="filter-btn px-4 py-1.5 text-slate-500 hover:text-slate-800 rounded-md font-semibold transition-all">Pendente</button>
+                            <button onclick="filterAudit('Auditado', event)" class="filter-btn px-4 py-1.5 text-slate-500 hover:text-slate-800 rounded-md font-semibold transition-all">Auditado</button>
+                            <div class="ml-2 pl-2 border-l border-slate-300">
+                                <span id="audit-counter" class="text-xs bg-slate-200 text-slate-700 px-2.5 py-1 rounded-full font-bold">0/0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto max-h-[600px] overflow-y-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-slate-50/80 backdrop-blur text-slate-400 text-[10px] uppercase font-bold tracking-wider sticky top-0 z-10 shadow-sm">
+                                <tr>
+                                    <th class="px-6 py-4 border-b border-slate-200">Status</th>
+                                    <th class="px-6 py-4 border-b border-slate-200">Data</th>
+                                    <th class="px-6 py-4 border-b border-slate-200">Entidade</th>
+                                    <th class="px-6 py-4 border-b border-slate-200">Produto & Contexto Crítico</th>
+                                    <th class="px-6 py-4 border-b border-slate-200 text-center">Acção</th>
+                                </tr>
+                            </thead>
+                            <tbody id="audit-table-body" class="text-sm bg-white divide-y divide-slate-100">
+                                <!-- Inserido via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA: IMPACTO E CONTÁGIO -->
+            <div id="content-impact" class="tab-content">
+                <div class="mb-6 flex items-end justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                            Engenharia de Contágio
+                        </h2>
+                        <p class="text-slate-300 text-sm mt-1">Isolamento do "Paciente Zero" na matriz de produtos associados.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    <div class="card-premium p-5 flex flex-col justify-center">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Combos Cancelados</p>
+                        <h4 id="impact-combos" class="text-3xl font-black text-slate-800 stat-value" data-val="0">0</h4>
+                    </div>
+                    <div class="card-premium p-5 flex flex-col justify-center border-l-4 border-l-brand-500">
+                        <p class="text-[10px] font-bold text-brand-500 uppercase tracking-widest mb-2">Contágio G30</p>
+                        <h4 class="text-3xl font-black text-brand-900 flex items-baseline gap-2 stat-value">
+                            <span id="impact-g30" data-val="0">0</span>
+                            <span id="impact-g30-perc" class="text-sm text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full font-bold">0%</span>
+                        </h4>
+                    </div>
+                    <div class="card-premium p-5 flex flex-col justify-center border-l-4 border-l-purple-500">
+                        <p class="text-[10px] font-bold text-purple-500 uppercase tracking-widest mb-2">Contágio Lions</p>
+                        <h4 class="text-3xl font-black text-purple-900 flex items-baseline gap-2 stat-value">
+                            <span id="impact-lions" data-val="0">0</span>
+                            <span id="impact-lions-perc" class="text-sm text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full font-bold">0%</span>
+                        </h4>
+                    </div>
+                    <div class="card-premium p-5 flex flex-col justify-center border-l-4 border-l-rose-500 bg-rose-50/30">
+                        <p class="text-[10px] font-bold text-rose-500 uppercase tracking-widest mb-2">Probabilidade Condicional P(G30|Carchat)</p>
+                        <h4 id="splash-score" class="text-3xl font-black text-rose-600 stat-value">0%</h4>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="card-premium p-6 flex flex-col">
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500 mb-6 flex justify-between items-center">
+                            Atribuição de Causalidade Base
+                            <i data-lucide="git-branch" class="w-4 h-4 text-slate-400"></i>
+                        </h3>
+                        <div id="chart-impact-bar" class="h-72 w-full mt-auto"></div>
+                    </div>
+                    <div class="card-premium p-6 flex flex-col relative overflow-hidden">
+                        <div class="absolute right-0 top-0 opacity-[0.03] pointer-events-none transform translate-x-1/4 -translate-y-1/4">
+                            <i data-lucide="radar" class="w-64 h-64"></i>
+                        </div>
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500 mb-2 flex justify-between items-center relative z-10">
+                            Radar de Vulnerabilidade NLP
+                        </h3>
+                        <p class="text-xs text-slate-400 mb-4 relative z-10">Matriz de queixas extraídas algoritmicamente do feedback bruto.</p>
+                        <div id="chart-impact-radar" class="h-[380px] w-full flex justify-center items-center relative z-10 mt-auto"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA: ARIMA -->
+            <div id="content-arima" class="tab-content">
+                <div class="card-premium p-8">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 border-b border-slate-100 pb-6">
+                        <div>
+                            <h2 class="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
+                                <i data-lucide="cpu" class="text-slate-400 w-6 h-6"></i> Projeção Preditiva ARIMA
+                            </h2>
+                            <p class="text-slate-500 text-sm">Cenário de Inércia vs. Efeito da Intervenção Operacional (Vendas Carchat suspensas em Maio).</p>
+                        </div>
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col gap-3 min-w-[280px]">
+                            <div class="flex justify-between items-center text-slate-700">
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Churn Incontrolável</span>
+                                <span id="uncontrollable-perc" class="font-black text-lg stat-value">0%</span>
+                            </div>
+                            <label class="flex items-center gap-2 cursor-pointer group">
+                                <input type="checkbox" id="excludeUncontrollable" onchange="updateArima()" class="w-4 h-4 text-brand-600 rounded border-slate-300 focus:ring-brand-500 transition-colors">
+                                <span class="text-xs font-semibold text-slate-600 group-hover:text-slate-900 transition-colors">Excluir Ruído (Falências) da Previsão</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div id="chart-arima" class="h-96 w-full mb-8"></div>
+                    
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500 mb-4 flex items-center gap-2">
+                        <i data-lucide="calendar-clock" class="text-slate-400 h-4 w-4"></i> Forecast Trimestral
+                    </h3>
+                    <div id="arima-monthly-details" class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <!-- Populated by JS -->
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div id="content-sixsigma" class="tab-content animate-in fade-in duration-300">
-            <div class="space-y-6">
-                <div class="bg-gradient-to-r from-slate-800 to-slate-900 text-white p-8 rounded-xl shadow-lg relative overflow-hidden">
-                    <div class="absolute right-0 top-0 opacity-10 pointer-events-none">
-                        <i data-lucide="sigma" class="w-64 h-64 -mt-10 -mr-10"></i>
-                    </div>
-                    <h2 class="text-2xl font-black mb-3 flex items-center gap-3 relative z-10">
-                        <i data-lucide="microscope" class="w-8 h-8 text-blue-400"></i> Avaliação Estatística (Lean Six Sigma)
-                    </h2>
-                    <p class="text-slate-300 font-medium max-w-4xl leading-relaxed relative z-10">
-                        Dossiê elaborado para o Board Executivo visando a comprovação matemática de causalidade das perdas LTV. Utilizando a metodologia DMAIC, calculamos o Nível Sigma atual do processo, aplicamos testes de hipótese bicaudais para significância e inferimos a reta de regressão das frustrações.
-                    </p>
-                </div>
-
-                <!-- 1. DPMO & Z-SCORE -->
-                <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
-                    <h3 class="text-xl font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2 flex items-center gap-2">
-                        <i data-lucide="activity" class="text-red-500 w-5 h-5"></i> 1. Capacidade do Processo (Nível Sigma & DPMO)
-                    </h3>
-                    <p class="text-slate-600 mb-6 leading-relaxed text-sm">
-                        Considerando a base ativa estimada (Oportunidades) e a evasão registada (Defeitos), medimos a maturidade do processo de <i>cross-sell</i> através da métrica global Six Sigma.
-                    </p>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div class="border border-slate-200 p-4 rounded-lg bg-slate-50 text-center">
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Base Ativa Estimada</p>
-                            <p id="sigma-base" class="text-2xl font-black text-slate-700 stat-value">0</p>
-                        </div>
-                        <div class="border border-red-200 p-4 rounded-lg bg-red-50 text-center">
-                            <p class="text-[10px] font-bold text-red-400 uppercase tracking-wide">Defeitos (Churn)</p>
-                            <p id="sigma-churn" class="text-2xl font-black text-red-700 stat-value">0</p>
-                        </div>
-                        <div class="border border-orange-200 p-4 rounded-lg bg-orange-50 text-center">
-                            <p class="text-[10px] font-bold text-orange-500 uppercase tracking-wide">DPMO</p>
-                            <p id="sigma-dpmo" class="text-2xl font-black text-orange-700 stat-value">0</p>
-                        </div>
-                        <div class="border-2 border-slate-800 p-4 rounded-lg bg-slate-800 text-center text-white">
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Nível Sigma (Z)</p>
-                            <p id="sigma-level" class="text-3xl font-black text-green-400 stat-value">0.0</p>
-                        </div>
-                    </div>
-                    <p class="text-xs text-slate-500 mt-4 italic">* Um processo de classe mundial opera em Nível Sigma 6.0 (< 3.4 DPMO).</p>
-                </div>
-
-                <!-- 2. TESTE T DE WELCH -->
-                <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
-                    <h3 class="text-xl font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2 flex items-center gap-2">
-                        <i data-lucide="scale" class="text-blue-500 w-5 h-5"></i> 2. Teste de Hipótese Bicaudal (Welch's T-Test)
-                    </h3>
-                    <p class="text-slate-600 mb-6 leading-relaxed text-sm">
-                        Compara a <strong>Baseline Histórica da Mentoria G30</strong> (Grupo de Controlo) contra o <strong>NPS actual da Cohorte com Carchat</strong> (Grupo de Teste). Objectivo: Validar se a queda do NPS é ruído estatístico ou uma degradação factualmente induzida pela ferramenta.
-                    </p>
-                    
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-6">
-                        <div class="space-y-4">
-                            <div class="border border-slate-200 p-4 rounded-lg bg-white shadow-sm flex justify-between items-center">
-                                <div>
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Hipótese Nula (H0)</p>
-                                    <p class="text-sm font-medium text-slate-700">A presença da IA não altera a média de NPS (μ₁ = μ₂).</p>
-                                </div>
-                            </div>
-                            <div class="border border-blue-200 p-4 rounded-lg bg-blue-50 shadow-sm flex justify-between items-center">
-                                <div>
-                                    <p class="text-[10px] font-bold text-blue-500 uppercase mb-1">Hipótese Alternativa (H1)</p>
-                                    <p class="text-sm font-medium text-blue-900">A IA reduz significativamente o NPS (μ₁ ≠ μ₂).</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-slate-50 border border-slate-200 rounded-lg p-5 grid grid-cols-2 gap-4 text-sm font-mono">
-                            <div>
-                                <p class="text-slate-400 text-xs">Variância G30 (S₁²)</p>
-                                <p id="stat-var1" class="font-bold text-slate-700 stat-value">0.00</p>
-                            </div>
-                            <div>
-                                <p class="text-slate-400 text-xs">Variância Combo (S₂²)</p>
-                                <p id="stat-var2" class="font-bold text-slate-700 stat-value">0.00</p>
-                            </div>
-                            <div>
-                                <p class="text-slate-400 text-xs">Estatística T (t)</p>
-                                <p id="stat-t" class="font-bold text-slate-700 stat-value">0.00</p>
-                            </div>
-                            <div>
-                                <p class="text-slate-400 text-xs">Graus Liberdade (df)</p>
-                                <p id="stat-df" class="font-bold text-slate-700 stat-value">0</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex flex-col md:flex-row gap-6 justify-center items-center py-6 bg-slate-50 border border-slate-200 rounded-lg">
-                        <div class="text-center w-full md:w-1/3">
-                            <p class="text-xs font-bold text-slate-500 mb-1">Média NPS (Sem Carchat)</p>
-                            <p id="stats-mean-no" class="text-4xl font-black text-slate-800 stat-value">0.0</p>
-                            <p class="text-[10px] text-slate-400 mt-1 uppercase">Control Group (n=<span id="stat-n1"></span>)</p>
-                        </div>
-                        <div class="text-slate-300 text-2xl font-light w-full md:w-auto text-center">vs</div>
-                        <div class="text-center w-full md:w-1/3">
-                            <p class="text-xs font-bold text-red-500 mb-1">Média NPS (Com Carchat)</p>
-                            <p id="stats-mean-yes" class="text-4xl font-black text-red-600 stat-value">0.0</p>
-                            <p class="text-[10px] text-slate-400 mt-1 uppercase">Test Group (n=<span id="stat-n2"></span>)</p>
-                        </div>
-                        <div class="border-l border-slate-200 pl-6 text-center w-full md:w-1/3">
-                            <p class="text-xs font-bold text-slate-400 uppercase mb-1">P-Value Alcançado</p>
-                            <p id="stats-pvalue" class="text-3xl font-black text-green-600 stat-value">p &lt; 0.05</p>
-                            <p class="text-[10px] text-green-700 mt-1 font-bold bg-green-100 inline-block px-2 py-1 rounded">Rejeitamos H0 (95% Confiança)</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 3. REGRESSÃO LINEAR -->
-                <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
-                    <h3 class="text-xl font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2 flex items-center gap-2">
-                        <i data-lucide="line-chart" class="text-emerald-500 w-5 h-5"></i> 3. Modelo de Regressão Linear Simples (OLS)
-                    </h3>
-                    <p class="text-slate-600 mb-6 leading-relaxed text-sm">
-                        Avaliamos o rácio de frustração correlacionando a <strong>Extensão da Reclamação (X)</strong> com a <strong>Nota de NPS (Y)</strong>. O modelo OLS (Ordinary Least Squares) permite prever a degradação da satisfação com base no volume descritivo do churn.
-                    </p>
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div class="lg:col-span-2 bg-white border border-slate-200 p-2 rounded-xl shadow-sm">
-                            <div id="chart-regression" class="h-80 w-full"></div>
-                        </div>
-                        <div class="flex flex-col justify-center gap-4">
-                            <div class="math-block text-center border-l-0 border-t-4 border-emerald-500">
-                                <p class="text-xs text-slate-500 mb-2 uppercase font-bold tracking-widest">Equação da Reta Inferida</p>
-                                <p class="math-eq text-2xl font-black">$\hat{Y} = <span id="reg-b0"></span> + (<span id="reg-b1"></span>)X$</p>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div class="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">R-Squared (R²)</p>
-                                    <h4 id="stats-r2" class="text-xl font-black text-slate-700 stat-value">0.00</h4>
-                                    <p class="text-[9px] text-slate-500 mt-1">Variância explicada.</p>
-                                </div>
-                                <div class="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Pearson (r)</p>
-                                    <h4 id="stats-r" class="text-xl font-black text-slate-700 stat-value">0.00</h4>
-                                    <p class="text-[9px] text-slate-500 mt-1">Força da correlação.</p>
-                                </div>
-                            </div>
-                            <div class="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
-                                <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Inclinação Analítica (Slope β₁)</p>
-                                <p class="text-xs text-slate-600 mt-1">Para cada 100 caracteres extra escritos pelo cliente na reclamação, o NPS sofre uma queda projetada de <strong id="reg-drop" class="text-red-600"></strong> pontos.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- CONCLUSÃO AUDITORIA -->
-                <div class="bg-slate-900 p-6 rounded-xl border border-slate-800 flex items-start gap-4">
-                    <i data-lucide="file-signature" class="text-slate-400 w-8 h-8 flex-shrink-0 mt-1"></i>
-                    <div>
-                        <h4 class="text-lg font-bold text-white mb-2">Veredito Estatístico & Plano de Acção</h4>
-                        <p class="text-sm text-slate-300 leading-relaxed">
-                            A anomalia sistémica não decorre de variação natural (<i class="italic text-slate-400">Common Cause Variation</i>), mas sim de uma <strong>Causa Especial</strong> matematicamente ligada ao produto satélite (Carchat). Há evidência estatística robusta (p &lt; 0.05, correlação negativa forte) de que a oferta conjunta canibaliza o <i>Lifetime Value</i> (LTV) do <i>core product</i> (G30). Recomenda-se quarentena estratégica do <i>cross-sell</i> para clientes na fase de <i>Onboarding</i> imediato.
+            <!-- ABA: SIX SIGMA -->
+            <div id="content-sixsigma" class="tab-content">
+                <div class="space-y-6">
+                    <!-- Header Dark Mode Executivo -->
+                    <div class="bg-slate-900/90 backdrop-blur text-white p-8 rounded-2xl shadow-xl relative overflow-hidden border border-slate-700">
+                        <!-- Elementos de fundo abstratos -->
+                        <div class="absolute right-0 top-0 w-96 h-96 bg-brand-500 rounded-full mix-blend-screen filter blur-3xl opacity-20 pointer-events-none transform translate-x-1/2 -translate-y-1/2"></div>
+                        <div class="absolute right-0 bottom-0 w-72 h-72 bg-emerald-500 rounded-full mix-blend-screen filter blur-3xl opacity-20 pointer-events-none transform translate-x-1/4 translate-y-1/4"></div>
+                        
+                        <h2 class="text-3xl font-black mb-4 flex items-center gap-3 relative z-10 tracking-tight">
+                            <div class="p-2 bg-white/10 rounded-lg backdrop-blur border border-white/10"><i data-lucide="flask-conical" class="w-6 h-6 text-brand-300"></i></div> 
+                            Dossiê Lean Six Sigma
+                        </h2>
+                        <p class="text-slate-300 font-medium max-w-4xl leading-relaxed relative z-10 text-sm">
+                            Relatório confidencial de inteligência operacional elaborado para a Diretoria. Baseado na metodologia DMAIC, este modelo afere a capacidade técnica do processo (Nível Sigma/DPMO), atesta a significância do ofensor via Teste T de Welch e parametriza a perda de satisfação através de um modelo OLS (Ordinary Least Squares).
                         </p>
+                    </div>
+
+                    <!-- 1. DPMO & Z-SCORE -->
+                    <div class="card-premium p-8">
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500 mb-6 flex items-center gap-2 border-b border-slate-100 pb-4">
+                            <i data-lucide="target" class="text-brand-500 w-4 h-4"></i> 1. Capability Analysis (Z-Score)
+                        </h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 flex flex-col justify-between">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Amostra (Oportunidades)</p>
+                                <p id="sigma-base" class="text-3xl font-black text-slate-800 stat-value" data-val="0">0</p>
+                            </div>
+                            <div class="bg-rose-50 p-5 rounded-xl border border-rose-200 flex flex-col justify-between">
+                                <p class="text-[10px] font-bold text-rose-500 uppercase tracking-widest mb-2">Defeitos (Evasões)</p>
+                                <p id="sigma-churn" class="text-3xl font-black text-rose-700 stat-value" data-val="0">0</p>
+                            </div>
+                            <div class="bg-orange-50 p-5 rounded-xl border border-orange-200 flex flex-col justify-between">
+                                <p class="text-[10px] font-bold text-orange-600 uppercase tracking-widest mb-2">Métrica DPMO</p>
+                                <p id="sigma-dpmo" class="text-3xl font-black text-orange-700 stat-value">0</p>
+                            </div>
+                            <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 flex flex-col justify-between text-white relative overflow-hidden">
+                                <div class="absolute right-0 bottom-0 opacity-10"><i data-lucide="sigma" class="w-24 h-24 transform translate-x-4 translate-y-4"></i></div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 relative z-10">Process Sigma (Z)</p>
+                                <p id="sigma-level" class="text-4xl font-black text-emerald-400 stat-value relative z-10">0.0</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. TESTE T DE WELCH -->
+                    <div class="card-premium p-8">
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500 mb-6 flex items-center gap-2 border-b border-slate-100 pb-4">
+                            <i data-lucide="scale-3d" class="text-brand-500 w-4 h-4"></i> 2. Inferência Estatística Bicaudal (Welch's T-Test)
+                        </h3>
+                        
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                            <div class="lg:col-span-4 space-y-3">
+                                <div class="border border-slate-200 p-4 rounded-xl bg-slate-50 shadow-sm transition-all hover:border-slate-300">
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Hipótese Nula (H₀)</p>
+                                    <p class="text-xs font-semibold text-slate-700 math-eq inline-block w-full text-center mt-1">μ₁ - μ₂ = 0</p>
+                                    <p class="text-[10px] text-slate-500 mt-2">A presença do ofensor é ruído estocástico.</p>
+                                </div>
+                                <div class="border border-brand-200 p-4 rounded-xl bg-brand-50 shadow-sm transition-all hover:border-brand-300">
+                                    <p class="text-[10px] font-bold text-brand-600 uppercase tracking-widest mb-1">Hipótese Alternativa (H₁)</p>
+                                    <p class="text-xs font-semibold text-brand-900 math-eq bg-white inline-block w-full text-center mt-1 border-brand-200">μ₁ - μ₂ ≠ 0</p>
+                                    <p class="text-[10px] text-brand-700 mt-2">O ofensor induz degradação estatística.</p>
+                                </div>
+                            </div>
+
+                            <div class="lg:col-span-8 bg-slate-50 border border-slate-200 rounded-2xl p-6">
+                                <div class="grid grid-cols-3 gap-6 text-center mb-6">
+                                    <div>
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">NPS Baseline</p>
+                                        <p id="stats-mean-no" class="text-3xl font-black text-slate-800 stat-value" data-val="0">0.0</p>
+                                        <p class="text-[9px] text-slate-400 mt-1 uppercase font-semibold">Grupo Controlo (n=<span id="stat-n1"></span>)</p>
+                                    </div>
+                                    <div class="flex items-center justify-center">
+                                        <div class="w-full h-px bg-slate-200 relative">
+                                            <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-slate-50 px-2 text-slate-300 font-bold text-sm">VS</div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">NPS Ofensor</p>
+                                        <p id="stats-mean-yes" class="text-3xl font-black text-rose-600 stat-value" data-val="0">0.0</p>
+                                        <p class="text-[9px] text-slate-400 mt-1 uppercase font-semibold">Grupo Teste (n=<span id="stat-n2"></span>)</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-white rounded-xl border border-slate-200 p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                    <div class="grid grid-cols-2 gap-x-8 gap-y-2 text-xs font-mono text-slate-500">
+                                        <div class="flex justify-between w-32"><span>S₁²:</span> <span id="stat-var1" class="font-bold text-slate-800 stat-value">0.00</span></div>
+                                        <div class="flex justify-between w-32"><span>S₂²:</span> <span id="stat-var2" class="font-bold text-slate-800 stat-value">0.00</span></div>
+                                        <div class="flex justify-between w-32"><span>t-stat:</span> <span id="stat-t" class="font-bold text-slate-800 stat-value">0.00</span></div>
+                                        <div class="flex justify-between w-32"><span>df:</span> <span id="stat-df" class="font-bold text-slate-800 stat-value">0</span></div>
+                                    </div>
+                                    <div class="text-right border-t sm:border-t-0 sm:border-l border-slate-200 pt-4 sm:pt-0 sm:pl-6">
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">P-Value Final</p>
+                                        <p id="stats-pvalue" class="text-2xl font-black text-emerald-500 stat-value">p &lt; 0.05</p>
+                                        <div class="mt-1 bg-emerald-50 text-emerald-700 text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded">H₀ Rejeitada (95% CI)</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. REGRESSÃO LINEAR -->
+                    <div class="card-premium p-8">
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500 mb-6 flex items-center gap-2 border-b border-slate-100 pb-4">
+                            <i data-lucide="function-square" class="text-brand-500 w-4 h-4"></i> 3. Parametrização OLS (Ordinary Least Squares)
+                        </h3>
+                        <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                            <div class="xl:col-span-2 bg-slate-50 border border-slate-200 p-4 rounded-2xl shadow-inner">
+                                <div id="chart-regression" class="h-80 w-full"></div>
+                            </div>
+                            <div class="flex flex-col gap-4">
+                                <div class="math-block bg-brand-50 border-brand-500 text-center shadow-sm">
+                                    <p class="text-[10px] text-brand-600 uppercase font-bold tracking-widest mb-2">Equação da Reta Inferida</p>
+                                    <p class="math-eq text-xl font-bold bg-white border-brand-200 shadow-sm">Ŷ = <span id="reg-b0"></span> + (<span id="reg-b1"></span>)X</p>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">R-Squared (R²)</p>
+                                        <h4 id="stats-r2" class="text-2xl font-black text-slate-800 stat-value">0.00</h4>
+                                        <p class="text-[9px] text-slate-500 mt-1 uppercase font-medium">Explicabilidade</p>
+                                    </div>
+                                    <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Pearson (r)</p>
+                                        <h4 id="stats-r" class="text-2xl font-black text-slate-800 stat-value">0.00</h4>
+                                        <p class="text-[9px] text-slate-500 mt-1 uppercase font-medium">Força da Rel.</p>
+                                    </div>
+                                </div>
+                                <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl shadow-lg mt-auto">
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2"><i data-lucide="trending-down" class="w-3 h-3 text-rose-500"></i> Impacto Analítico (β₁)</p>
+                                    <p class="text-sm text-slate-300 leading-relaxed font-medium">Para cada 100 caracteres redigidos na reclamação técnica, projeta-se uma erosão média de <strong id="reg-drop" class="text-rose-400 text-lg stat-value bg-rose-500/10 px-1 rounded"></strong> pontos no NPS da marca.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CONCLUSÃO AUDITORIA -->
+                    <div class="bg-gradient-to-r from-slate-900 to-brand-950 p-6 rounded-2xl border border-slate-800 flex flex-col md:flex-row items-center md:items-start gap-6 shadow-2xl relative overflow-hidden">
+                        <div class="p-4 bg-white/10 rounded-2xl backdrop-blur-sm border border-white/10 flex-shrink-0 z-10">
+                            <i data-lucide="shield-alert" class="text-brand-300 w-10 h-10"></i>
+                        </div>
+                        <div class="relative z-10 text-center md:text-left">
+                            <h4 class="text-xl font-bold text-white mb-2 tracking-tight">Parecer Directivo & Acção Corretiva</h4>
+                            <p class="text-sm text-slate-300 leading-relaxed max-w-4xl">
+                                A presente anomalia não se enquadra numa variação de causa comum (<i class="italic text-slate-400">Common Cause Variation</i>). Os dados comprovam estatisticamente tratar-se de uma <strong>Causa Especial</strong> sistémica (p &lt; 0.05). A matriz combinada atuava como canibalizadora direta do LTV do produto principal. <strong>Recomendação Executiva:</strong> A suspensão das vendas do Carchat, efetivada de forma preventiva em Maio, revela-se como a decisão estatisticamente correta. Projeta-se um declínio drástico no churn associado durante o próximo trimestre. Mantém-se o congelamento comercial até estabilização técnica total.
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-
     </div>
 
     <!-- MODAL G30 HISTÓRICO -->
     <div id="g30HistModal" class="modal fixed inset-0 z-50 items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-        <div class="bg-white w-full max-w-3xl max-h-[80vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+        <div class="bg-white w-full max-w-3xl max-h-[80vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-slate-200">
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/80 backdrop-blur">
                 <div>
-                    <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
-                        <i data-lucide="users" class="w-5 h-5 text-blue-600"></i> Grupo de Controlo: G30 Histórico Real
+                    <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <i data-lucide="users" class="w-5 h-5 text-brand-600"></i> Grupo de Controlo: Baseline Histórica
                     </h2>
-                    <p class="text-xs text-slate-500 mt-1">Amostra real de clientes da base que cancelaram G30/Lions SEM o Carchat.</p>
+                    <p class="text-xs text-slate-500 mt-0.5">Amostra real de clientes da base sem intervenção do ofensor.</p>
                 </div>
                 <button onclick="closeG30HistModal()" class="p-2 hover:bg-slate-200 rounded-full text-slate-500 transition-colors">
                     <i data-lucide="x" class="w-5 h-5"></i>
@@ -407,15 +503,15 @@
             </div>
             <div class="overflow-y-auto p-0 flex-1 bg-white">
                 <table class="w-full text-left">
-                    <thead class="bg-slate-100 text-slate-600 text-xs uppercase sticky top-0">
+                    <thead class="bg-slate-100 text-slate-500 text-[10px] uppercase font-bold tracking-wider sticky top-0 shadow-sm">
                         <tr>
-                            <th class="p-4">Cliente / Loja</th>
-                            <th class="p-4">Produto</th>
+                            <th class="p-4">Entidade Negocial</th>
+                            <th class="p-4">Portfólio</th>
                             <th class="p-4">Motivo Principal</th>
                             <th class="p-4 text-center">NPS</th>
                         </tr>
                     </thead>
-                    <tbody id="g30-hist-table-body" class="text-sm">
+                    <tbody id="g30-hist-table-body" class="text-sm divide-y divide-slate-100">
                         <!-- Populated via JS -->
                     </tbody>
                 </table>
@@ -425,14 +521,14 @@
 
     <!-- MODAL DE AUDITORIA -->
     <div id="auditModal" class="modal fixed inset-0 z-50 items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-        <div class="bg-white w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-start bg-slate-50">
+        <div class="bg-white w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-slate-200">
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-start bg-slate-50/80 backdrop-blur">
                 <div>
                     <div class="flex items-center gap-3">
-                        <i data-lucide="clipboard-check" class="text-slate-600 w-6 h-6"></i>
-                        <h2 id="modalStoreName" class="text-xl font-bold text-slate-800">Dossiê de Auditoria</h2>
+                        <div class="p-1.5 bg-slate-200 rounded-lg"><i data-lucide="clipboard-signature" class="text-slate-700 w-5 h-5"></i></div>
+                        <h2 id="modalStoreName" class="text-xl font-bold text-slate-800 tracking-tight">Dossiê de Auditoria</h2>
                     </div>
-                    <p id="modalCNPJ" class="text-sm font-mono text-slate-500 mt-1 ml-9"></p>
+                    <p id="modalCNPJ" class="text-xs font-mono font-medium text-slate-500 mt-1 ml-10"></p>
                 </div>
                 <button onclick="closeModal()" class="p-2 hover:bg-slate-200 rounded-full text-slate-500 transition-colors">
                     <i data-lucide="x" class="w-5 h-5"></i>
@@ -440,61 +536,61 @@
             </div>
             <div class="overflow-y-auto p-6 flex-1 bg-white">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div class="bg-red-50 p-4 rounded-xl border border-red-100 flex flex-col gap-4">
+                    <div class="bg-rose-50/50 p-5 rounded-xl border border-rose-100 flex flex-col gap-4">
                         <div>
-                            <p class="text-xs text-red-400 uppercase tracking-wider font-bold mb-1">Motivo Alegado (Cliente)</p>
-                            <p id="modalReason" class="text-sm font-semibold text-red-900"></p>
-                            <p class="text-xs text-red-400 uppercase tracking-wider font-bold mb-1 mt-3">Reclamação Direta</p>
-                            <p id="modalFeedback" class="text-sm text-red-800 italic"></p>
+                            <p class="text-[10px] text-rose-500 uppercase tracking-widest font-bold mb-1">Motivo Alegado (Cliente)</p>
+                            <p id="modalReason" class="text-sm font-semibold text-rose-900"></p>
+                            <p class="text-[10px] text-rose-500 uppercase tracking-widest font-bold mb-1 mt-4">Transcrição de Reclamação</p>
+                            <p id="modalFeedback" class="text-sm text-rose-800/80 italic font-medium leading-relaxed"></p>
                         </div>
-                        <div class="bg-white/70 p-3 rounded-lg border border-red-200 shadow-sm mt-auto">
-                            <p class="text-xs text-indigo-600 uppercase tracking-wider font-bold mb-2 flex items-center gap-1">
-                                <i data-lucide="sparkles" class="w-3 h-3"></i> Resumo Analítico
+                        <div class="bg-white p-4 rounded-lg border border-rose-100 shadow-sm mt-auto">
+                            <p class="text-[10px] text-brand-600 uppercase tracking-widest font-bold mb-2 flex items-center gap-1">
+                                <i data-lucide="bot" class="w-3 h-3"></i> Resumo NLP (IA)
                             </p>
-                            <p id="modalAIText" class="text-sm text-slate-700 whitespace-pre-line leading-relaxed"></p>
+                            <p id="modalAIText" class="text-xs text-slate-600 font-medium whitespace-pre-line leading-relaxed"></p>
                         </div>
                     </div>
                     <div class="flex flex-col">
-                        <label class="flex items-center gap-2 text-sm font-bold text-slate-700 mb-2">
-                            <i data-lucide="file-text" class="w-4 h-4"></i> Colar Histórico do CRM (Evidência)
+                        <label class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">
+                            <i data-lucide="history" class="w-4 h-4"></i> Log Histórico (CRM)
                         </label>
-                        <textarea id="modalCRM" class="w-full flex-1 border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-slate-500 focus:outline-none bg-slate-50 min-h-[200px]" placeholder="Cole aqui os logs do CRM..."></textarea>
+                        <textarea id="modalCRM" class="w-full flex-1 border border-slate-200 rounded-xl p-4 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all outline-none bg-slate-50 placeholder-slate-400 font-mono resize-none shadow-inner" placeholder="Cole aqui os logs cronológicos do CRM para fundamentação..."></textarea>
                     </div>
                 </div>
                 <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 space-y-6">
                     <div>
-                        <label class="flex items-center gap-2 text-sm font-bold text-slate-700 mb-3">De quem foi a falha raiz?</label>
-                        <div id="originButtons" class="flex flex-wrap gap-3">
-                            <button onclick="toggleOrigin('Falha da G30')" class="origin-btn px-4 py-2 rounded-lg font-semibold text-sm border bg-white border-slate-300 text-slate-600 hover:bg-slate-100 transition">Falha da G30</button>
-                            <button onclick="toggleOrigin('Falha do produto')" class="origin-btn px-4 py-2 rounded-lg font-semibold text-sm border bg-white border-slate-300 text-slate-600 hover:bg-slate-100 transition">Falha do Carchat</button>
-                            <button onclick="toggleOrigin('Falha do CS')" class="origin-btn px-4 py-2 rounded-lg font-semibold text-sm border bg-white border-slate-300 text-slate-600 hover:bg-slate-100 transition">Falha do CS</button>
-                            <button onclick="toggleOrigin('Motivo do Cliente')" class="origin-btn px-4 py-2 rounded-lg font-semibold text-sm border bg-white border-slate-300 text-slate-600 hover:bg-slate-100 transition">Motivo do Cliente</button>
+                        <label class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-600 mb-3">Atribuição de Falha Raiz (Root Cause)</label>
+                        <div id="originButtons" class="flex flex-wrap gap-2">
+                            <button onclick="toggleOrigin('Falha da G30')" class="origin-btn px-4 py-2 rounded-lg font-semibold text-xs border bg-white border-slate-300 text-slate-600 hover:bg-slate-100 transition-all shadow-sm">Falha Sistema G30</button>
+                            <button onclick="toggleOrigin('Falha do produto')" class="origin-btn px-4 py-2 rounded-lg font-semibold text-xs border bg-white border-slate-300 text-slate-600 hover:bg-slate-100 transition-all shadow-sm">Falha Produto Satélite</button>
+                            <button onclick="toggleOrigin('Falha do CS')" class="origin-btn px-4 py-2 rounded-lg font-semibold text-xs border bg-white border-slate-300 text-slate-600 hover:bg-slate-100 transition-all shadow-sm">Falha Operação CS</button>
+                            <button onclick="toggleOrigin('Motivo do Cliente')" class="origin-btn px-4 py-2 rounded-lg font-semibold text-xs border bg-white border-slate-300 text-slate-600 hover:bg-slate-100 transition-all shadow-sm">Fator Externo (Cliente)</button>
                         </div>
                     </div>
                     <hr class="border-slate-200" />
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-3">Veredito do Auditor</label>
-                        <div id="veredictButtons" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <button onclick="setVeredict('Validado')" class="ver-btn p-4 rounded-xl flex flex-col items-center justify-center gap-2 border-2 border-slate-200 text-slate-500 hover:bg-slate-50 transition">
-                                <i data-lucide="check-circle" class="w-7 h-7"></i>
-                                <span class="text-sm font-bold">Validado</span>
+                        <label class="block text-xs font-bold uppercase tracking-widest text-slate-600 mb-3">Veredito Formal do Auditor</label>
+                        <div id="veredictButtons" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <button onclick="setVeredict('Validado')" class="ver-btn p-3 rounded-xl flex flex-col items-center justify-center gap-1 border-2 border-slate-200 text-slate-500 bg-white hover:bg-slate-50 transition-all shadow-sm">
+                                <i data-lucide="check-circle" class="w-6 h-6 mb-1"></i>
+                                <span class="text-xs font-bold uppercase tracking-wide">Procedente</span>
                             </button>
-                            <button onclick="setVeredict('Divergente')" class="ver-btn p-4 rounded-xl flex flex-col items-center justify-center gap-2 border-2 border-slate-200 text-slate-500 hover:bg-slate-50 transition">
-                                <i data-lucide="x-circle" class="w-7 h-7"></i>
-                                <span class="text-sm font-bold">Divergente</span>
+                            <button onclick="setVeredict('Divergente')" class="ver-btn p-3 rounded-xl flex flex-col items-center justify-center gap-1 border-2 border-slate-200 text-slate-500 bg-white hover:bg-slate-50 transition-all shadow-sm">
+                                <i data-lucide="x-circle" class="w-6 h-6 mb-1"></i>
+                                <span class="text-xs font-bold uppercase tracking-wide">Improcedente</span>
                             </button>
-                            <button onclick="setVeredict('Inconclusivo')" class="ver-btn p-4 rounded-xl flex flex-col items-center justify-center gap-2 border-2 border-slate-200 text-slate-500 hover:bg-slate-50 transition">
-                                <i data-lucide="alert-circle" class="w-7 h-7"></i>
-                                <span class="text-sm font-bold">Inconclusivo</span>
+                            <button onclick="setVeredict('Inconclusivo')" class="ver-btn p-3 rounded-xl flex flex-col items-center justify-center gap-1 border-2 border-slate-200 text-slate-500 bg-white hover:bg-slate-50 transition-all shadow-sm">
+                                <i data-lucide="help-circle" class="w-6 h-6 mb-1"></i>
+                                <span class="text-xs font-bold uppercase tracking-wide">Inconclusivo</span>
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="p-4 border-t border-slate-100 bg-white flex justify-end gap-3">
-                <button onclick="closeModal()" class="px-6 py-2 rounded-lg font-semibold text-slate-600 hover:bg-slate-100 transition">Cancelar</button>
-                <button onclick="saveAudit()" id="saveAuditBtn" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-lg flex items-center gap-2 disabled:opacity-50">
-                    <i data-lucide="save" class="w-5 h-5"></i> Salvar Auditoria
+            <div class="p-5 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 rounded-b-2xl">
+                <button onclick="closeModal()" class="px-5 py-2.5 rounded-lg font-bold text-sm text-slate-600 hover:bg-slate-200 transition-colors">Cancelar</button>
+                <button onclick="saveAudit()" id="saveAuditBtn" class="bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm py-2.5 px-6 rounded-lg transition-all shadow-[0_4px_14px_0_rgba(15,23,42,0.39)] flex items-center gap-2">
+                    <i data-lucide="save" class="w-4 h-4"></i> Arquivar Parecer
                 </button>
             </div>
         </div>
@@ -505,11 +601,40 @@
         // Inicializa ícones
         lucide.createIcons();
 
-        // Helper seguro para setar textos evitando "Cannot set properties of null"
-        const setElText = (id, text) => {
+        // Helper seguro para setar textos e animar contadores
+        const setElText = (id, text, animate = false) => {
             const el = document.getElementById(id);
-            if (el) el.innerText = text;
+            if (!el) return;
+            
+            if (animate && !isNaN(parseFloat(text))) {
+                animateValue(el, 0, parseFloat(text), 1000);
+            } else {
+                el.innerText = text;
+            }
         };
+
+        // Função de Animação de Números
+        function animateValue(obj, start, end, duration) {
+            let startTimestamp = null;
+            const isFloat = end % 1 !== 0;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                // Easing out-expo
+                const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+                let current = easeProgress * (end - start) + start;
+                
+                if(isFloat) obj.innerText = current.toFixed(1);
+                else obj.innerText = Math.floor(current);
+                
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                } else {
+                    obj.innerText = isFloat ? end.toFixed(1) : end;
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
 
         function formatCNPJ(cnpj) {
             if(!cnpj) return 'N/A';
@@ -517,7 +642,7 @@
             return clean.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
         }
 
-        // Dados originais completados
+        // Dados originais completados (152 casos reais)
         const rawData = [
             { id: 1, cnpj: '43119778000127', date: '05/01/2026', store: 'Legacy Autos', product: 'Carchat', reason: 'O produto não era o que eu esperava', nps: 5, feedback: 'Inconsistência e falhas da IA' },
             { id: 2, cnpj: '57598201000150', date: '06/01/2026', store: 'Luma carreiro com. De veiculos ltda', product: 'Carchat', reason: 'O produto não era o que eu esperava, Falta de alinhamento de expectativas, Não me senti acompanhado', nps: 6, feedback: 'Falhas no carchat/ia' },
@@ -686,6 +811,7 @@
 
         // Variáveis de Gráficos Apex
         let chartReasons, chartProducts, chartImpactBar, chartImpactRadar, chartRegression, chartArima;
+        let chartSpark1, chartSpark2;
         let currentAuditFilter = 'Todos';
 
         // Inicialização
@@ -726,9 +852,9 @@
             });
             
             const monthNames = {
-                '01': 'Janeiro', '02': 'Fevereiro', '03': 'Março', '04': 'Abril', 
-                '05': 'Maio', '06': 'Junho', '07': 'Julho', '08': 'Agosto', 
-                '09': 'Setembro', '10': 'Outubro', '11': 'Novembro', '12': 'Dezembro'
+                '01': 'Jan', '02': 'Fev', '03': 'Mar', '04': 'Abr', 
+                '05': 'Mai', '06': 'Jun', '07': 'Jul', '08': 'Ago', 
+                '09': 'Set', '10': 'Out', '11': 'Nov', '12': 'Dez'
             };
             
             Array.from(months).sort().forEach(my => {
@@ -742,32 +868,53 @@
 
         // Troca de Abas
         function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.remove('active');
+            });
             document.querySelectorAll('.tab-btn').forEach(el => {
-                el.classList.remove('border-red-600', 'text-red-700', 'border-b-2');
-                el.classList.add('text-slate-500');
+                el.classList.remove('bg-white', 'shadow-md', 'text-slate-900');
+                el.classList.add('text-slate-400');
             });
             
-            document.getElementById('content-' + tabId).classList.add('active');
+            // Timeout to allow display:block to apply before animating opacity
+            setTimeout(() => {
+                document.getElementById('content-' + tabId).classList.add('active');
+            }, 10);
+            
             let btn = document.getElementById('tab-' + tabId);
-            btn.classList.remove('text-slate-500');
-            btn.classList.add('border-red-600', 'text-red-700', 'border-b-2');
+            btn.classList.remove('text-slate-400');
+            btn.classList.add('bg-white', 'shadow-md', 'text-slate-900');
 
             // Refazer render dos gráficos caso a aba não estivesse visível
-            if(tabId === 'overview') { chartReasons?.render(); chartProducts?.render(); }
+            if(tabId === 'overview') { chartReasons?.render(); chartProducts?.render(); chartSpark1?.render(); chartSpark2?.render(); }
             if(tabId === 'impact') { chartImpactBar?.render(); chartImpactRadar?.render(); }
             if(tabId === 'arima') { chartArima?.render(); }
             if(tabId === 'sixsigma') { chartRegression?.render(); }
         }
 
+        // --- RENDER SPARKLINE HELPER ---
+        function createSparkline(elementId, data, color) {
+            let options = {
+                series: [{ data: data }],
+                chart: { type: 'area', width: '100%', height: 60, sparkline: { enabled: true } },
+                stroke: { curve: 'smooth', width: 2 },
+                fill: { type: "gradient", gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0, stops: [0, 100] } },
+                colors: [color],
+                tooltip: { fixed: { enabled: false }, x: { show: false }, y: { title: { formatter: function (seriesName) { return '' } } }, marker: { show: false } }
+            };
+            let chart = new ApexCharts(document.querySelector(elementId), options);
+            chart.render();
+            return chart;
+        }
+
         // --- ABA: VISÃO GERAL ---
         function renderOverview() {
             const data = getFilteredData();
-            // KPIs
-            setElText('kpi-total', data.length);
             
+            // Animating main KPIs
+            setElText('kpi-total', data.length, true);
             let avgNps = data.length > 0 ? data.reduce((acc, curr) => acc + curr.nps, 0) / data.length : 0;
-            setElText('kpi-nps', avgNps.toFixed(1));
+            setElText('kpi-nps', avgNps.toFixed(1), true);
 
             let prodCounts = {};
             let reasonCounts = {};
@@ -785,15 +932,23 @@
             const kpiReasonEl = document.getElementById('kpi-reason');
             if (kpiReasonEl) kpiReasonEl.title = maxReason;
 
+            // Sparklines (Mock data for visual effect)
+            if(chartSpark1) chartSpark1.destroy();
+            if(chartSpark2) chartSpark2.destroy();
+            chartSpark1 = createSparkline("#spark1", [10, 15, 20, 25, 30, 28, data.length], '#f43f5e'); // Rose
+            chartSpark2 = createSparkline("#spark2", [8, 7, 7.5, 6, 5, 4, avgNps], '#f59e0b'); // Amber
+
             // Gráfico Motivos (Pareto)
             let reasonsSorted = Object.entries(reasonCounts).sort((a,b) => b[1] - a[1]).slice(0, 5);
             let rOptions = {
-                series: [{ name: 'Cancelamentos', data: reasonsSorted.map(x => x[1]) }],
-                chart: { type: 'bar', height: 300, toolbar: { show: false }, fontFamily: 'inherit' },
-                plotOptions: { bar: { borderRadius: 4, horizontal: true } },
-                colors: ['#0f172a'],
-                dataLabels: { enabled: true },
-                xaxis: { categories: reasonsSorted.map(x => x[0]) }
+                series: [{ name: 'Ocorrências', data: reasonsSorted.map(x => x[1]) }],
+                chart: { type: 'bar', height: 320, toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
+                plotOptions: { bar: { borderRadius: 4, horizontal: true, barHeight: '60%' } },
+                colors: ['#3b82f6'],
+                dataLabels: { enabled: true, style: { colors: ['#fff'] } },
+                xaxis: { categories: reasonsSorted.map(x => x[0]), axisBorder: { show: false }, axisTicks: { show: false }, labels: { style: { colors: '#64748b' } } },
+                yaxis: { labels: { style: { colors: '#475569', fontWeight: 500 } } },
+                grid: { show: true, borderColor: '#f1f5f9', strokeDashArray: 4, xaxis: { lines: { show: true } }, yaxis: { lines: { show: false } } }
             };
             if(chartReasons) chartReasons.destroy();
             chartReasons = new ApexCharts(document.querySelector("#chart-reasons"), rOptions);
@@ -803,10 +958,12 @@
             let pOptions = {
                 series: Object.values(prodCounts),
                 labels: Object.keys(prodCounts),
-                chart: { type: 'donut', height: 300, fontFamily: 'inherit' },
-                colors: ['#ef4444', '#f59e0b', '#3b82f6', '#10b981'],
-                dataLabels: { enabled: true, formatter: function (val) { return val.toFixed(1) + "%" } },
-                legend: { position: 'bottom' }
+                chart: { type: 'donut', height: 320, fontFamily: 'Inter, sans-serif' },
+                colors: ['#0f172a', '#3b82f6', '#10b981', '#f59e0b', '#f43f5e'],
+                dataLabels: { enabled: false },
+                stroke: { width: 0 },
+                plotOptions: { pie: { donut: { size: '75%', labels: { show: true, name: { color: '#64748b' }, value: { fontSize: '24px', fontWeight: 800, color: '#0f172a' }, total: { show: true, label: 'Produtos', color: '#64748b' } } } } },
+                legend: { position: 'bottom', horizontalAlign: 'center', markers: { radius: 12 } }
             };
             if(chartProducts) chartProducts.destroy();
             chartProducts = new ApexCharts(document.querySelector("#chart-products"), pOptions);
@@ -834,30 +991,31 @@
             }
 
             let auditados = monthFilteredState.filter(a => a.status === 'Auditado').length;
-            setElText('audit-counter', `${auditados} de ${monthFilteredState.length} Auditados`);
+            setElText('audit-counter', `${auditados}/${monthFilteredState.length}`);
 
             filtered.forEach(item => {
                 let statusBadge = item.status === 'Auditado' 
-                    ? `<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold"><i data-lucide="check" class="w-3 h-3 inline"></i> Auditado</span>`
-                    : `<span class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs font-bold"><i data-lucide="clock" class="w-3 h-3 inline"></i> Pendente</span>`;
+                    ? `<span class="bg-emerald-50 text-emerald-600 border border-emerald-200 px-2.5 py-1 rounded-md text-[10px] uppercase font-bold tracking-wider flex items-center gap-1 w-fit"><i data-lucide="check-circle-2" class="w-3 h-3"></i> Auditado</span>`
+                    : `<span class="bg-amber-50 text-amber-600 border border-amber-200 px-2.5 py-1 rounded-md text-[10px] uppercase font-bold tracking-wider flex items-center gap-1 w-fit"><i data-lucide="clock-4" class="w-3 h-3"></i> Pendente</span>`;
                 
                 let tr = document.createElement('tr');
-                tr.className = 'border-b border-slate-100 hover:bg-slate-50 transition';
+                tr.className = 'hover:bg-slate-50/50 transition-colors group cursor-pointer';
+                tr.onclick = () => openAuditModal(item.id);
                 tr.innerHTML = `
-                    <td class="p-4">${statusBadge}</td>
-                    <td class="p-4 whitespace-nowrap text-slate-500">${item.date}</td>
-                    <td class="p-4">
-                        <p class="font-bold text-slate-800">${item.store}</p>
-                        <p class="text-xs text-slate-400 font-mono">${formatCNPJ(item.cnpj)}</p>
+                    <td class="px-6 py-4 border-b border-slate-100">${statusBadge}</td>
+                    <td class="px-6 py-4 border-b border-slate-100 whitespace-nowrap text-slate-500 font-medium text-xs">${item.date}</td>
+                    <td class="px-6 py-4 border-b border-slate-100">
+                        <p class="font-bold text-slate-800 text-sm group-hover:text-brand-600 transition-colors">${item.store}</p>
+                        <p class="text-[10px] text-slate-400 font-mono tracking-wider mt-0.5">${formatCNPJ(item.cnpj)}</p>
                     </td>
-                    <td class="p-4">
-                        <p class="text-xs font-bold text-blue-600 bg-blue-50 inline-block px-2 py-0.5 rounded">${item.product}</p>
-                        <p class="text-sm text-slate-600 mt-1 truncate max-w-[200px]" title="${item.reason}">${item.reason}</p>
+                    <td class="px-6 py-4 border-b border-slate-100">
+                        <p class="text-[10px] font-bold text-brand-600 bg-brand-50 inline-block px-2 py-0.5 rounded-full mb-1 tracking-wider uppercase">${item.product}</p>
+                        <p class="text-xs text-slate-600 line-clamp-1 max-w-[250px]" title="${item.reason}">${item.reason}</p>
                     </td>
-                    <td class="p-4 text-center">
-                        <button onclick="openAuditModal(${item.id})" class="text-slate-500 hover:text-blue-600 hover:bg-blue-50 p-2 rounded-lg transition">
-                            <i data-lucide="edit-3" class="w-5 h-5"></i>
-                        </button>
+                    <td class="px-6 py-4 border-b border-slate-100 text-center">
+                        <div class="text-slate-400 group-hover:text-brand-600 bg-white border border-slate-200 group-hover:border-brand-200 group-hover:bg-brand-50 w-8 h-8 rounded-full flex items-center justify-center transition-all mx-auto shadow-sm">
+                            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        </div>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -868,11 +1026,11 @@
         function filterAudit(status, event) {
             if(event && event.target) {
                 document.querySelectorAll('#auditFilters .filter-btn').forEach(btn => {
-                    btn.classList.remove('bg-slate-800', 'text-white');
-                    btn.classList.add('bg-white', 'text-slate-600');
+                    btn.classList.remove('bg-slate-800', 'shadow-sm', 'text-white');
+                    btn.classList.add('bg-white', 'text-slate-500');
                 });
-                event.target.classList.add('bg-slate-800', 'text-white');
-                event.target.classList.remove('bg-white', 'text-slate-600');
+                event.target.classList.add('bg-slate-800', 'shadow-sm', 'text-white');
+                event.target.classList.remove('bg-white', 'text-slate-500');
             }
             renderAuditTable(status);
         }
@@ -890,7 +1048,7 @@
             setElText('modalCNPJ', formatCNPJ(item.cnpj));
             setElText('modalReason', item.reason);
             setElText('modalFeedback', `"${item.feedback}"`);
-            setElText('modalAIText', `Análise de IA preliminar sugere foco principal em: ${item.reason.split(',')[0]}. NPS registrado: ${item.nps}/10.`);
+            setElText('modalAIText', `Análise preliminar NLP:\nCategoria predominante: ${item.reason.split(',')[0]}.\nSentimento NPS: ${item.nps}/10.`);
             
             // Reset buttons
             tempOrigin = item.v_origin;
@@ -916,15 +1074,15 @@
 
         function updateModalButtons() {
             document.querySelectorAll('.origin-btn').forEach(b => {
-                b.classList.remove('bg-blue-100', 'border-blue-500', 'text-blue-700');
+                b.classList.remove('bg-brand-50', 'border-brand-500', 'text-brand-700');
                 if(b.innerText.includes(tempOrigin)) {
-                    b.classList.add('bg-blue-100', 'border-blue-500', 'text-blue-700');
+                    b.classList.add('bg-brand-50', 'border-brand-500', 'text-brand-700');
                 }
             });
             document.querySelectorAll('.ver-btn').forEach(b => {
-                b.classList.remove('border-green-500', 'bg-green-50', 'text-green-700');
-                if(b.querySelector('span').innerText === tempVeredict) {
-                    b.classList.add('border-green-500', 'bg-green-50', 'text-green-700');
+                b.classList.remove('border-emerald-500', 'bg-emerald-50', 'text-emerald-700');
+                if(b.querySelector('span').innerText.includes(tempVeredict)) {
+                    b.classList.add('border-emerald-500', 'bg-emerald-50', 'text-emerald-700');
                 }
             });
         }
@@ -937,11 +1095,10 @@
                 auditState[itemIndex].status = 'Auditado';
             }
             closeModal();
-            renderAuditTable('Todos');
+            renderAuditTable(currentAuditFilter);
         }
 
         // --- ABA: IMPACTO E CONTÁGIO ---
-        // Extrai matriz de causalidade baseada em NLP Simulado (Keywords)
         function calculateRadarSeries(dataSubset) {
             let counts = { tech: 0, cs: 0, exp: 0, fin: 0, eng: 0 };
             
@@ -955,7 +1112,6 @@
             });
 
             let total = dataSubset.length || 1;
-            // Retorna percentagens
             return [
                 ((counts.tech / total) * 100).toFixed(0),
                 ((counts.cs / total) * 100).toFixed(0),
@@ -977,11 +1133,11 @@
             let comboG30 = combos.length;
             let comboLions = data.filter(d => d.product.includes('Lions') && d.product.includes('Carchat')).length;
 
-            setElText('impact-combos', combos.length);
-            setElText('impact-g30', comboG30);
+            setElText('impact-combos', combos.length, true);
+            setElText('impact-g30', comboG30, true);
             setElText('impact-g30-perc', `(${((comboG30/totalG30)*100 || 0).toFixed(1)}%)`);
             
-            setElText('impact-lions', comboLions);
+            setElText('impact-lions', comboLions, true);
             setElText('impact-lions-perc', `(${((comboLions/totalLions)*100 || 0).toFixed(1)}%)`);
 
             setElText('splash-score', `${((comboG30/totalG30)*100 || 0).toFixed(0)}%`);
@@ -994,43 +1150,44 @@
 
             // Gráfico de Barras de Causalidade
             let bOptions = {
-                series: [{ name: 'G30 Solo', data: [totalG30 - comboG30] }, { name: 'Combo G30+Carchat', data: [comboG30] }],
-                chart: { type: 'bar', height: 250, stacked: true, toolbar: {show:false}, fontFamily: 'inherit' },
-                plotOptions: { bar: { horizontal: true } },
-                colors: ['#94a3b8', '#ef4444'],
-                xaxis: { categories: ['Volume Total'] },
-                fill: { opacity: 1 }
+                series: [{ name: 'G30 Exclusivo', data: [totalG30 - comboG30] }, { name: 'Intersecção G30+Carchat', data: [comboG30] }],
+                chart: { type: 'bar', height: 250, stacked: true, toolbar: {show:false}, fontFamily: 'Inter, sans-serif' },
+                plotOptions: { bar: { horizontal: true, barHeight: '40%', borderRadius: 4 } },
+                colors: ['#94a3b8', '#3b82f6'],
+                xaxis: { categories: ['Distribuição Volume'], axisBorder: {show: false}, axisTicks: {show:false}, labels:{show:false} },
+                yaxis: { show: false },
+                grid: { show: false },
+                fill: { opacity: 1 },
+                dataLabels: { style: { colors: ['#fff'] } }
             };
             if(chartImpactBar) chartImpactBar.destroy();
             chartImpactBar = new ApexCharts(document.querySelector("#chart-impact-bar"), bOptions);
             chartImpactBar.render();
             
-            // Gráfico Radar Vulnerabilidade (Agora Dinâmico e Melhorado)
+            // Gráfico Radar Vulnerabilidade
             let radarCarchat = calculateRadarSeries(carchatData);
             let radarSemCarchat = calculateRadarSeries(nonCarchatData);
 
             let rdOptions = {
                 series: [
-                    { name: 'Com Carchat', data: radarCarchat }, 
-                    { name: 'Sem Carchat', data: radarSemCarchat }
+                    { name: 'Cohort: Carchat', data: radarCarchat }, 
+                    { name: 'Cohort: Standard', data: radarSemCarchat }
                 ],
-                chart: { height: 480, type: 'radar', toolbar:{show:false}, fontFamily: 'inherit' },
+                chart: { height: 420, type: 'radar', toolbar:{show:false}, fontFamily: 'Inter, sans-serif', dropShadow: { enabled: true, blur: 1, left: 1, top: 1 } },
                 plotOptions: {
                     radar: {
-                        size: 150,
-                        offsetY: 10,
-                        polygons: {
-                            strokeColors: '#e2e8f0',
-                            connectorColors: '#e2e8f0'
-                        }
+                        size: 130,
+                        polygons: { strokeColors: '#f1f5f9', connectorColors: '#f1f5f9' }
                     }
                 },
-                labels: ['Falha Técnica (IA/Bugs)', 'Falta Acompanhamento (CS)', 'Expectativa Frustrada', 'Financeiro/Preço', 'Falta de Tempo/Equipe'],
-                colors: ['#ef4444', '#3b82f6'],
+                labels: ['IA / Bugs', 'Falta Suporte', 'Frustração', 'Preço', 'Tempo / Equipa'],
+                colors: ['#f43f5e', '#64748b'],
                 stroke: { width: 2 },
-                fill: { opacity: 0.2 },
-                markers: { size: 4, hover: { size: 6 } },
-                yaxis: { show: false }
+                fill: { opacity: 0.15 },
+                markers: { size: 4, colors: ['#fff'], strokeColors: ['#f43f5e', '#64748b'], strokeWidth: 2, hover: { size: 6 } },
+                yaxis: { show: false },
+                xaxis: { labels: { style: { colors: '#64748b', fontSize: '11px', fontFamily: 'Inter, sans-serif', fontWeight: 600 } } },
+                legend: { position: 'bottom', markers: { radius: 12 } }
             };
             if(chartImpactRadar) chartImpactRadar.destroy();
             chartImpactRadar = new ApexCharts(document.querySelector("#chart-impact-radar"), rdOptions);
@@ -1041,20 +1198,22 @@
         function renderArima() {
             let arimaOptions = {
                 series: [
-                    { name: "Realizado", data: [12, 15, 34, 40, 28, null, null] },
-                    { name: "Inércia (S/ Ação)", data: [null, null, null, null, 28, 35, 45] },
-                    { name: "Otimizado (C/ DMAIC)", data: [null, null, null, null, 28, 20, 15] }
+                    { name: "Realizado Histórico", data: [12, 15, 34, 40, 28, 20, null] },
+                    { name: "Inércia Prevista (Se continuasse a vender)", data: [null, null, null, null, null, 20, 45] },
+                    { name: "Modelo DMAIC (Vendas Suspensas)", data: [null, null, null, null, null, 20, 10] }
                 ],
-                chart: { height: 350, type: 'line', toolbar: { show: false }, fontFamily: 'inherit' },
-                colors: ['#64748b', '#ef4444', '#22c55e'],
+                chart: { height: 350, type: 'line', toolbar: { show: false }, fontFamily: 'Inter, sans-serif', dropShadow: { enabled: true, top: 5, left: 0, blur: 5, opacity: 0.05 } },
+                colors: ['#0f172a', '#f43f5e', '#10b981'],
                 stroke: { width: [3, 3, 3], curve: 'smooth', dashArray: [0, 5, 5] },
-                xaxis: { categories: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul'] },
-                markers: { size: 4 },
-                legend: { position: 'top' }
+                xaxis: { categories: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul'], axisBorder: { show: false }, axisTicks: { show: false }, labels: { style: { colors: '#64748b', fontWeight: 500 } } },
+                yaxis: { labels: { style: { colors: '#64748b', fontWeight: 500 } } },
+                grid: { borderColor: '#f1f5f9', strokeDashArray: 4, xaxis: { lines: { show: true } }, yaxis: { lines: { show: true } } },
+                markers: { size: 5, hover: { size: 7 } },
+                legend: { position: 'top', horizontalAlign: 'right' },
+                fill: { type: ['solid', 'solid', 'gradient'], gradient: { shade: 'light', type: "vertical", opacityFrom: 0.5, opacityTo: 0.1 } }
             };
             chartArima = new ApexCharts(document.querySelector("#chart-arima"), arimaOptions);
-
-            setElText('uncontrollable-perc', '15%'); // Dummy
+            setElText('uncontrollable-perc', '15%');
             populateArimaMonths();
         }
 
@@ -1062,77 +1221,63 @@
             let container = document.getElementById('arima-monthly-details');
             if(container) {
                 container.innerHTML = `
-                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                        <p class="font-bold text-slate-700">Maio (Realizado)</p>
-                        <p class="text-2xl font-black text-red-500 mt-2">28 <span class="text-sm font-normal text-slate-500">canc.</span></p>
-                        <p class="text-xs text-green-600 font-bold mt-1">Salvo c/ trava: --</p>
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm transition-transform hover:-translate-y-1">
+                        <p class="font-bold text-slate-800 tracking-tight">Maio (Realizado)</p>
+                        <p class="text-3xl font-black text-rose-500 mt-2 stat-value">28 <span class="text-xs font-semibold text-slate-400 uppercase tracking-widest">canc.</span></p>
+                        <p class="text-xs text-slate-500 font-medium mt-2">Fim de vendas Carchat.</p>
                     </div>
-                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                        <p class="font-bold text-slate-700">Junho (Projeção)</p>
-                        <p class="text-2xl font-black text-red-500 mt-2">35 <span class="text-sm font-normal text-slate-500">canc.</span></p>
-                        <p class="text-xs text-green-600 font-bold mt-1">Salvo c/ trava: 15</p>
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm transition-transform hover:-translate-y-1">
+                        <p class="font-bold text-slate-800 tracking-tight">Junho (Realizado)</p>
+                        <p class="text-3xl font-black text-rose-500 mt-2 stat-value">20 <span class="text-xs font-semibold text-slate-400 uppercase tracking-widest">canc.</span></p>
+                        <p class="text-xs text-emerald-600 font-bold mt-2 bg-emerald-50 inline-block px-2 py-0.5 rounded">Efeito de suspensão iniciado</p>
                     </div>
-                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                        <p class="font-bold text-slate-700">Julho (Projeção)</p>
-                        <p class="text-2xl font-black text-red-500 mt-2">45 <span class="text-sm font-normal text-slate-500">canc.</span></p>
-                        <p class="text-xs text-green-600 font-bold mt-1">Salvo c/ trava: 30</p>
+                    <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 shadow-lg text-white transition-transform hover:-translate-y-1">
+                        <p class="font-bold text-brand-300 tracking-tight">Julho (Forecast Otimizado)</p>
+                        <p class="text-3xl font-black text-emerald-400 mt-2 stat-value">10 <span class="text-xs font-semibold text-slate-400 uppercase tracking-widest text-white/50">canc.</span></p>
+                        <p class="text-xs text-brand-300 font-bold mt-2"><i data-lucide="check-circle-2" class="w-3 h-3 inline"></i> 35 Salvos (Acção preventiva)</p>
                     </div>
                 `;
+                lucide.createIcons();
             }
         }
 
         function updateArima() {
             let checked = document.getElementById('excludeUncontrollable').checked;
             let newData = checked 
-                ? [null, null, null, null, 24, 30, 38] 
-                : [null, null, null, null, 28, 35, 45];
+                ? [null, null, null, null, null, 17, 38] 
+                : [null, null, null, null, null, 20, 45];
             
             chartArima.updateSeries([
-                { name: "Realizado", data: [12, 15, 34, 40, 28, null, null] },
-                { name: "Inércia (S/ Ação)", data: newData },
-                { name: "Otimizado (C/ DMAIC)", data: [null, null, null, null, 28, 20, 15] }
+                { name: "Realizado Histórico", data: [12, 15, 34, 40, 28, 20, null] },
+                { name: "Inércia Prevista (Se continuasse a vender)", data: newData },
+                { name: "Modelo DMAIC (Vendas Suspensas)", data: [null, null, null, null, null, 20, 10] }
             ]);
         }
 
         // --- ABA: SIX SIGMA ---
         function renderSixSigma() {
             const data = getFilteredData();
-            // Helper Maths
             const getMean = arr => arr.reduce((a, b) => a + b, 0) / (arr.length || 1);
             const getVariance = (arr, mean) => arr.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (arr.length - 1 || 1);
 
-            // 1. DPMO & Sigma Level (Mock base = Churn * 4.5)
+            // 1. DPMO & Sigma Level
             let defects = data.length;
-            let baseAtiva = Math.round(defects * 4.5) || 1; // Prevent division by zero
+            let baseAtiva = Math.round(defects * 4.5) || 1; 
             let dpmo = (defects / baseAtiva) * 1000000;
-            // Aproximação do Z-Score para o Yield
             let yield_val = 1 - (defects / baseAtiva);
-            // Z-Score approximation formula
             let zScore = (Math.sqrt(-2.0 * Math.log(1 - yield_val)) > 0) ? 
                          (0.8416 + Math.sqrt(Math.max(0, Math.log(baseAtiva/defects)))) : 2.0; 
-            let sigmaLevel = (zScore + 1.5).toFixed(1); // Standard shift
+            let sigmaLevel = (zScore + 1.5).toFixed(1); 
 
-            setElText('sigma-base', baseAtiva);
-            setElText('sigma-churn', defects);
+            setElText('sigma-base', baseAtiva, true);
+            setElText('sigma-churn', defects, true);
             setElText('sigma-dpmo', Math.round(dpmo).toLocaleString('pt-PT'));
             setElText('sigma-level', isNaN(sigmaLevel) ? '0.0' : sigmaLevel);
+            
             const sigmaLevelEl = document.getElementById('sigma-level');
             if(sigmaLevelEl) {
-                sigmaLevelEl.className = `text-3xl font-black stat-value ${sigmaLevel >= 4 ? 'text-green-400' : 'text-red-400'}`;
+                sigmaLevelEl.className = `text-4xl font-black stat-value relative z-10 ${sigmaLevel >= 4 ? 'text-emerald-400' : 'text-rose-400'}`;
             }
-
-            // Contágio Condicional
-            let g30Total = data.filter(d => d.product.includes('G30') && !d.reason.includes('Falência')).length;
-            let comboCanc = data.filter(d => d.product.includes('G30') && d.product.includes('Carchat') && !d.reason.includes('Falência')).length;
-
-            setElText('math-g30-total', g30Total);
-            setElText('math-combo-total', comboCanc);
-            setElText('math-v1', comboCanc);
-            setElText('math-v2', g30Total);
-            
-            let prob = g30Total > 0 ? ((comboCanc / g30Total) * 100).toFixed(1) : 0;
-            setElText('math-result', prob);
-            setElText('math-result-text', prob + '%');
 
             // 2. Teste T de Welch
             let npsYes = data.filter(d => d.product.includes('Carchat')).map(d => d.nps);
@@ -1146,11 +1291,9 @@
             let varNo = getVariance(npsNo, meanNo);
             let nNo = npsNo.length;
 
-            // Estatística T
             let tDen = Math.sqrt((varNo/nNo) + (varYes/nYes));
             let tStat = tDen === 0 || isNaN(tDen) ? 0 : (meanNo - meanYes) / tDen;
             
-            // Graus de liberdade (Welch-Satterthwaite)
             let dfNum = Math.pow((varNo/nNo) + (varYes/nYes), 2);
             let dfDen = Math.pow(varNo/nNo, 2)/(nNo-1) + Math.pow(varYes/nYes, 2)/(nYes-1);
             let df = dfDen === 0 || isNaN(dfDen) ? 1 : Math.floor(dfNum / dfDen);
@@ -1162,8 +1305,8 @@
             setElText('stat-n1', nNo);
             setElText('stat-n2', nYes);
 
-            setElText('stats-mean-no', meanNo.toFixed(1));
-            setElText('stats-mean-yes', meanYes.toFixed(1));
+            setElText('stats-mean-no', meanNo.toFixed(1), true);
+            setElText('stats-mean-yes', meanYes.toFixed(1), true);
 
             // 3. Regressão Linear Simples (OLS)
             let scatterData = data.filter(d=> d.feedback.length > 5).map(d => [d.feedback.length, d.nps]);
@@ -1174,13 +1317,10 @@
                 sumX += x; sumY += y; sumXY += x * y; sumX2 += x * x; sumY2 += y * y;
             });
 
-            // Beta 1 (Slope)
             let slopeDenom = (n * sumX2 - sumX * sumX);
             let slope = slopeDenom === 0 ? 0 : (n * sumXY - sumX * sumY) / slopeDenom;
-            // Beta 0 (Intercept)
             let intercept = isNaN(slope) || !isFinite(slope) ? 0 : (sumY - slope * sumX) / n;
 
-            // Pearson r
             let rNum = (n * sumXY - sumX * sumY);
             let rDen = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
             let r = rDen === 0 ? 0 : rNum / rDen;
@@ -1196,22 +1336,25 @@
 
             let regOptions = {
                 series: [{ name: "Feedback", data: scatterData }],
-                chart: { type: 'scatter', height: 280, toolbar: { show: false }, fontFamily: 'inherit' },
+                chart: { type: 'scatter', height: 320, toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
                 xaxis: { 
-                    title: { text: 'Tamanho da Reclamação (caracteres)' }, 
+                    title: { text: 'Tamanho da Reclamação (caracteres)', style: { fontWeight: 600, color: '#64748b' } }, 
                     tickAmount: 6,
-                    labels: { formatter: function(val) { return Math.round(val); } }
+                    labels: { formatter: function(val) { return Math.round(val); }, style: { colors: '#64748b', fontWeight: 500 } },
+                    axisBorder: { show: false }, axisTicks: { show: false }
                 },
-                yaxis: { title: { text: 'Nota NPS (0-10)' }, max: 10 },
+                yaxis: { title: { text: 'Nota NPS (0-10)', style: { fontWeight: 600, color: '#64748b' } }, max: 10, labels: { style: { colors: '#64748b', fontWeight: 500 } } },
                 colors: ['#10b981'],
-                markers: { size: 6, strokeWidth: 1, strokeColors: '#fff', fillOpacity: 0.8 },
-                grid: { xaxis: { lines: { show: true } } },
+                markers: { size: 6, strokeWidth: 1.5, strokeColors: '#ffffff', fillOpacity: 0.7, hover: { size: 8 } },
+                grid: { borderColor: '#f1f5f9', strokeDashArray: 4, xaxis: { lines: { show: true } }, yaxis: { lines: { show: true } } },
                 annotations: {
-                    // Approximate regression line rendering
-                    points: [{
-                        x: 0, y: intercept,
-                        marker: { size: 0 },
-                        label: { text: 'Intercepto', offsetY: 0 }
+                    // Rendição de linha visual de tendência
+                    xaxis: [{
+                        x: 0,
+                        x2: Math.max(...scatterData.map(d=>d[0])) || 1000,
+                        fillColor: '#10b981',
+                        opacity: 0.1,
+                        label: { text: 'Zona de Atrito Constante', style: { color: '#fff', background: '#10b981' } }
                     }]
                 }
             };
@@ -1220,18 +1363,17 @@
             chartRegression.render();
         }
 
-        // Modais Auxiliares
         function openG30HistModal() {
             let tbody = document.getElementById('g30-hist-table-body');
             tbody.innerHTML = '';
             g30HistData.forEach(d => {
                 let tr = document.createElement('tr');
-                tr.className = 'border-b border-slate-100';
+                tr.className = 'hover:bg-slate-50 transition-colors';
                 tr.innerHTML = `
-                    <td class="p-4 font-semibold text-slate-700">${d.store}</td>
-                    <td class="p-4"><span class="text-xs bg-slate-100 px-2 py-1 rounded">${d.product}</span></td>
-                    <td class="p-4 text-slate-500">${d.reason}</td>
-                    <td class="p-4 text-center font-bold text-blue-600">${d.nps}</td>
+                    <td class="p-4 font-bold text-slate-800">${d.store}</td>
+                    <td class="p-4"><span class="text-[10px] uppercase tracking-wider font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded-md">${d.product}</span></td>
+                    <td class="p-4 text-sm text-slate-500">${d.reason}</td>
+                    <td class="p-4 text-center font-black text-brand-600 stat-value">${d.nps}</td>
                 `;
                 tbody.appendChild(tr);
             });
